@@ -33,7 +33,7 @@ export default async function ServiceDetailPage({ params }: Props) {
           )}
           {!!(service.gallery_urls?.length) && (
             <div className="grid grid-cols-3 gap-3">
-              {service.gallery_urls!.slice(0,3).map((u, i) => (
+              {service.gallery_urls!.slice(0,3).map((u: string, i: number) => (
                 <img key={i} src={u} alt="galeria" className="w-full aspect-[4/3] object-cover rounded-lg border" />
               ))}
             </div>
