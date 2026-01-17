@@ -45,7 +45,13 @@ export default async function AdminDashboard() {
           <div key={a.id} className="card flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-500">{new Date(a.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(a.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-              <div className="font-medium">{a.services?.name} • {a.customers?.full_name}</div>
+              {(() => {
+                const serviceName = Array.isArray(a.services) ? a.services[0]?.name : (a.services as any)?.name
+                const customerName = Array.isArray(a.customers) ? a.customers[0]?.full_name : (a.customers as any)?.full_name
+                return (
+                  <div className="font-medium">{serviceName} • {customerName}</div>
+                )
+              })()}
               <div className="text-sm text-gray-600">{a.status}</div>
             </div>
             <form action={updateStatus} className="flex items-center gap-2">
