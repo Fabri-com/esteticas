@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
   const supabase = createClient()
@@ -16,24 +17,38 @@ export default async function AdminServicesPage(){
   async function upsertService(formData: FormData) {
     'use server'
     const supabase = createClient()
-    const id = String(formData.get('id')||'') || undefined
-    const payload = {
-      id,
+    const idRaw = (formData.get('id') || '').toString().trim()
+    const hasId = idRaw.length > 0
+    const base = {
       name: String(formData.get('name')),
       category: String(formData.get('category')),
-      duration_minutes: Number(formData.get('duration_minutes')),
-      price: Number(formData.get('price')),
-      description: String(formData.get('description')),
+      duration_minutes: parseInt(String(formData.get('duration_minutes') || '0'), 10),
+      price: parseFloat(String(formData.get('price') || '0')),
+      description: String(formData.get('description') || ''),
       is_active: Boolean(formData.get('is_active')),
     }
-    await supabase.from('services').upsert(payload)
+    const payload = hasId ? { id: idRaw, ...base } : base
+    const { error } = await supabase.from('services').upsert(payload).select('id')
+    if (error) {
+      // En un caso real podríamos propagar este error al UI.
+      console.error('upsert service error', error.message)
+      return
+    }
+    revalidatePath('/admin/services')
+    redirect('/admin/services')
   }
 
   async function deleteService(formData: FormData) {
     'use server'
     const supabase = createClient()
     const id = String(formData.get('id'))
-    await supabase.from('services').delete().eq('id', id)
+    const { error } = await supabase.from('services').delete().eq('id', id)
+    if (error) {
+      console.error('delete service error', error.message)
+      return
+    }
+    revalidatePath('/admin/services')
+    redirect('/admin/services')
   }
 
   return (
