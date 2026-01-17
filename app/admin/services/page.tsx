@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { randomUUID } from 'crypto'
+import ServiceForm from './service-form'
 
 async function requireAdmin() {
   const supabase = createClient()
@@ -16,7 +17,7 @@ export default async function AdminServicesPage(){
   const { data: services } = await supabase.from('services').select('*').order('name')
   const { data: categories } = await supabase.from('service_categories').select('*').order('name')
 
-  async function upsertService(formData: FormData) {
+  async function upsertService(_: any, formData: FormData) {
     'use server'
     const supabase = createClient()
     const idRaw = (formData.get('id') || '').toString().trim()
@@ -74,12 +75,11 @@ export default async function AdminServicesPage(){
     const payload = hasId ? { id: idRaw, ...base } : base
     const { error } = await supabase.from('services').upsert(payload).select('id')
     if (error) {
-      // En un caso real podríamos propagar este error al UI.
       console.error('upsert service error', error.message)
-      return
+      return { error: error.message }
     }
     revalidatePath('/admin/services')
-    redirect('/admin/services')
+    return { success: true }
   }
 
   async function deleteService(formData: FormData) {
@@ -98,33 +98,7 @@ export default async function AdminServicesPage(){
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Servicios</h1>
-      <form action={upsertService} className="card grid md:grid-cols-7 gap-2 items-end" encType="multipart/form-data">
-        <input name="name" placeholder="Nombre" className="border rounded px-2 py-1" required />
-        <select name="category_id" className="border rounded px-2 py-1">
-          <option value="">Sin categoría</option>
-          {categories?.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <input name="category" placeholder="Categoría (texto opcional)" className="border rounded px-2 py-1" />
-        <input name="duration_hhmm" type="time" step="60" placeholder="Duración" className="border rounded px-2 py-1" />
-        <input name="price" type="number" placeholder="Precio" className="border rounded px-2 py-1" required />
-        <div className="flex gap-2">
-          <input name="image_url" placeholder="URL imagen (opcional)" className="border rounded px-2 py-1" />
-          <input name="image_file" type="file" accept="image/*" className="border rounded px-2 py-1" />
-        </div>
-        <input name="description" placeholder="Descripción" className="border rounded px-2 py-1 md:col-span-2" />
-        <div className="md:col-span-3">
-          <label className="block text-sm mb-1">Incluye (una por línea)</label>
-          <textarea name="includes" placeholder="Ej.:\n• Limado y forma de uñas\n• Tratamiento de cutículas" className="w-full border rounded px-2 py-1 min-h-[76px]" />
-        </div>
-        <div className="md:col-span-3">
-          <label className="block text-sm mb-1">Galería (múltiples imágenes)</label>
-          <input name="gallery_files" type="file" accept="image/*" multiple className="border rounded px-2 py-1 w-full" />
-        </div>
-        <label className="flex items-center gap-2"><input name="is_active" type="checkbox" defaultChecked /> Activo</label>
-        <button className="btn md:col-start-7">Guardar</button>
-      </form>
+      <ServiceForm categories={categories || []} action={upsertService} />
 
       <div className="space-y-3">
         {services?.map(s => {
@@ -134,7 +108,7 @@ export default async function AdminServicesPage(){
               <div className="font-medium">{s.name}</div>
               <div>{catName}</div>
               <div>{s.duration_minutes}m</div>
-              <div>{Number(s.price ?? 0).toFixed(0)}</div>
+              <div>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}</div>
               <div className="text-sm text-gray-600 md:col-span-3">{s.description}</div>
               <div className="flex items-center gap-2 justify-end">
                 <form action={deleteService}>

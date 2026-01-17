@@ -8,7 +8,7 @@ export default async function ServiceDetailPage({ params }: Props) {
   const supabase = createClient()
   const { data: service } = await supabase
     .from('services')
-    .select('id,name,description,duration_minutes,price,image_url,category,category_id')
+    .select('id,name,description,duration_minutes,price,image_url,category,category_id,includes,gallery_urls')
     .eq('id', params.id)
     .single()
 
@@ -31,6 +31,13 @@ export default async function ServiceDetailPage({ params }: Props) {
           ) : (
             <div className="w-full aspect-[4/3] bg-pink-50 rounded-xl border" />
           )}
+          {!!(service.gallery_urls?.length) && (
+            <div className="grid grid-cols-3 gap-3">
+              {service.gallery_urls!.slice(0,3).map((u, i) => (
+                <img key={i} src={u} alt="galeria" className="w-full aspect-[4/3] object-cover rounded-lg border" />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -51,8 +58,19 @@ export default async function ServiceDetailPage({ params }: Props) {
             </div>
           </div>
 
+          {!!(service.includes?.length) && (
+            <div>
+              <h3 className="font-medium mb-2">El servicio incluye:</h3>
+              <ul className="space-y-1 text-sm">
+                {service.includes!.map((it: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2"><span className="text-pink-600">•</span><span>{it}</span></li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div>
-            <Link href="/booking" className="btn">Reservar este servicio</Link>
+            <Link href={`/booking?service=${service.id}`} className="btn">Reservar este servicio</Link>
           </div>
         </div>
       </div>
