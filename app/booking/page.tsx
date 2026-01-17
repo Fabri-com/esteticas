@@ -24,6 +24,13 @@ export default function BookingPage(){
     fetch('/api/services').then(r=>r.json()).then(setServices)
   }, [])
 
+  // Preseleccionar servicio por query param ?service=<id>
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const svc = sp.get('service')
+    if (svc) setForm(f => ({ ...f, service_id: f.service_id || svc }))
+  }, [])
+
   useEffect(() => {
     const phone = form.phone.replace(/\D/g,'')
     if (phone.length >= 8) {
