@@ -16,7 +16,6 @@ export default function CourseForm({
 }){
   const [imagePreview, setImagePreview] = useState<string | null>(initial?.image_url || null)
   const [newCatName, setNewCatName] = useState('')
-  const [creatingCat, setCreatingCat] = useState(false)
   const [state, formAction] = useFormState(action, null as any)
   const [catState, catAction] = useFormState(createCategory, null as any)
 
@@ -36,10 +35,21 @@ export default function CourseForm({
   }
 
   return (
-    <div className="card">
-      {state?.error && <div className="rounded border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{state.error}</div>}
-      {state?.success && <div className="rounded border border-green-200 bg-green-50 text-green-700 px-3 py-2 text-sm">Guardado</div>}
-      <form action={formAction} className="space-y-4" encType="multipart/form-data">
+    <div className="space-y-6">
+      <div className="card space-y-2 border-pink-200">
+        <h3 className="font-medium text-pink-700">Categorías</h3>
+        <form action={catAction} className="flex gap-2">
+          <input name="new_category_name" value={newCatName} onChange={e=>setNewCatName(e.target.value)} placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
+          <button className="btn">Agregar</button>
+        </form>
+        {catState?.error && <div className="text-xs text-red-600">{catState.error}</div>}
+        {catState?.success && <div className="text-xs text-green-600">Categoría creada</div>}
+      </div>
+
+      <div className="card">
+        {state?.error && <div className="rounded border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{state.error}</div>}
+        {state?.success && <div className="rounded border border-green-200 bg-green-50 text-green-700 px-3 py-2 text-sm">Guardado</div>}
+        <form action={formAction} className="space-y-4" encType="multipart/form-data">
         <input type="hidden" name="id" defaultValue={initial?.id || ''} />
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -54,20 +64,6 @@ export default function CourseForm({
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <div className="flex gap-2 mt-2 items-center">
-              {!creatingCat ? (
-                <button type="button" onClick={()=>setCreatingCat(true)} className="text-sm px-2 py-1 rounded border">Nueva categoría</button>
-              ) : (
-                <form action={async (fd: FormData) => {
-                  await catAction(fd as any)
-                  setNewCatName('')
-                  setCreatingCat(false)
-                }} className="flex gap-2 items-center">
-                  <input type="text" name="new_category_name" value={newCatName} onChange={e=>setNewCatName(e.target.value)} placeholder="Nombre de la categoría" className="border rounded px-2 py-1 text-sm" />
-                  <button className="text-sm px-2 py-1 rounded bg-pink-500 text-white">Crear</button>
-                </form>
-              )}
-            </div>
           </div>
         </div>
 
@@ -117,6 +113,7 @@ export default function CourseForm({
           <button className="px-4 py-2 rounded bg-pink-500 text-white">Guardar</button>
         </div>
       </form>
+      </div>
     </div>
   )
 }
