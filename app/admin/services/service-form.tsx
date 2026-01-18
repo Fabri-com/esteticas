@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useFormState } from 'react-dom'
+import { useRouter } from 'next/navigation'
 
 type Category = { id: string; name: string }
 
@@ -21,6 +22,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
   const [mainPreview, setMainPreview] = useState<string | null>(null)
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
   const [tw, setTw] = useState<TimeWindow[]>(windows)
+  const router = useRouter()
 
   useEffect(() => {
     return () => {
@@ -29,8 +31,24 @@ export default function ServiceForm({ categories, action, initial, createCategor
     }
   }, [mainPreview, galleryPreviews])
 
+  useEffect(() => {
+    if (catState?.success) router.refresh()
+  }, [catState?.success, router])
+
   return (
-    <form action={formAction} className="card space-y-6" encType="multipart/form-data">
+    <>
+      {/* Crear categoría (form separado para evitar forms anidados) */}
+      <div className="card space-y-2 mb-4">
+        <h3 className="font-medium">Categorías</h3>
+        <form action={catAction} className="flex gap-2">
+          <input name="new_category_name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
+          <button type="submit" className="rounded-md border px-3 py-2 text-sm">Agregar</button>
+        </form>
+        {catState?.error && <div className="text-xs text-red-600">{catState.error}</div>}
+        {catState?.success && <div className="text-xs text-green-600">Categoría creada</div>}
+      </div>
+
+      <form action={formAction} className="card space-y-6" encType="multipart/form-data">
       {state?.error && (
         <div className="rounded-md border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{state.error}</div>
       )}
@@ -50,14 +68,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <div className="space-y-1">
-              <form action={catAction} className="flex gap-2">
-                <input name="new_category_name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
-                <button type="submit" className="rounded-md border px-3 py-2 text-sm">Agregar</button>
-              </form>
-              {catState?.error && <div className="text-xs text-red-600">{catState.error}</div>}
-              {catState?.success && <div className="text-xs text-green-600">Categoría creada</div>}
-            </div>
+            <div />
           </div>
           <label className="inline-flex items-center gap-2 text-sm"><input name="is_active" type="checkbox" defaultChecked={initial?.is_active ?? true} /> Activo</label>
         </div>
@@ -187,5 +198,6 @@ export default function ServiceForm({ categories, action, initial, createCategor
         <button className="btn">Guardar</button>
       </div>
     </form>
+    </>
   )
 }

@@ -12,12 +12,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body>
         <header className="border-b">
-          <nav className="container h-14 flex items-center justify-between">
-            <Link href="/" className="font-semibold">Estética</Link>
-            <div className="flex gap-4 text-sm">
+          <nav className="container h-14 grid grid-cols-3 items-center">
+            <div>
+              <Link href="/" className="font-semibold">Estética</Link>
+            </div>
+            <div className="flex justify-center gap-4 text-sm">
               <Link href="/services">Servicios</Link>
               <Link href="/booking" className="btn py-1">Reservar</Link>
               <Link href="/academy">Academia</Link>
+            </div>
+            <div className="flex justify-end">
               <Link href="/admin" className="text-gray-500">Admin</Link>
             </div>
           </nav>
