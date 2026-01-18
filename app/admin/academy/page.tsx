@@ -13,7 +13,7 @@ async function requireAdmin() {
   return supabase
 }
 
-export default async function AdminAcademyPage(){
+export default async function AdminAcademyPage({ searchParams }: { searchParams?: { edit?: string } }){
   const supabase = await requireAdmin()
   const { data: courses } = await supabase
     .from('courses')
@@ -23,6 +23,16 @@ export default async function AdminAcademyPage(){
     .from('course_categories')
     .select('id,name')
     .order('name')
+
+  let initial: any = null
+  if (searchParams?.edit) {
+    const { data } = await supabase
+      .from('courses')
+      .select('id,title,level,duration_weeks,students,seats,price,mode,image_url,description,category_id')
+      .eq('id', searchParams.edit)
+      .maybeSingle()
+    initial = data || null
+  }
 
   async function createCategory(_: any, fd: FormData) {
     'use server'
@@ -87,7 +97,7 @@ export default async function AdminAcademyPage(){
         </div>
       </div>
 
-      <CourseForm categories={categories || []} initial={null} action={upsertCourse} createCategory={createCategory} />
+      <CourseForm categories={categories || []} initial={initial} action={upsertCourse} createCategory={createCategory} />
 
       <div className="space-y-3">
         {(courses||[]).map((c: any) => (
@@ -100,7 +110,7 @@ export default async function AdminAcademyPage(){
               </div>
             </div>
             <div className="flex gap-2">
-              {/* Simple edit: reuse the form by passing id via query param in the future. For now, allow delete */}
+              <a href={`/admin/academy?edit=${c.id}`} className="rounded-md border px-3 py-1.5 text-sm">Editar</a>
               <form action={deleteCourse}>
                 <input type="hidden" name="id" value={c.id} />
                 <button className="btn bg-gray-900 hover:bg-black">Eliminar</button>

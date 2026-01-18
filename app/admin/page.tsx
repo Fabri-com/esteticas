@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
 async function requireAdmin() {
   const supabase = createClient()
@@ -29,12 +30,14 @@ export default async function AdminDashboard() {
     const status = String(formData.get('status'))
     const supabase = createClient()
     await supabase.from('appointments').update({ status }).eq('id', id)
+    revalidatePath('/admin')
   }
 
   async function cleanupPending() {
     'use server'
     const supabase = createClient()
     await supabase.rpc('cleanup_expired_pending')
+    revalidatePath('/admin')
   }
 
   return (

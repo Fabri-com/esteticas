@@ -88,7 +88,7 @@ export default function AcademyPage(){
                   </div>
                   <div className="text-pink-600 font-semibold">{formatPrice(c.price)}</div>
                   <div className="flex gap-2 pt-1">
-                    <Link href={`#`} className="px-3 py-1 rounded border text-sm">Ver detalles</Link>
+                    <Link href={`/academy/${c.id}`} className="px-3 py-1 rounded border text-sm">Ver detalles</Link>
                     <a href={`https://wa.me/?text=${encodeURIComponent('Hola! Me interesa el curso '+c.title+'. ¿Podrían darme más info?')}`} target="_blank" className="px-3 py-1 rounded bg-pink-500 text-white text-sm">Consultar</a>
                   </div>
                 </div>
