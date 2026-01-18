@@ -82,16 +82,20 @@ export default function BookingPage(){
     const supabase = createClient()
     const { data: svc } = await supabase.from('services').select('slot_interval_minutes').eq('id', svcId).maybeSingle()
     const interval = svc?.slot_interval_minutes || 60
-    const d = new Date(dateISO + 'T00:00:00')
-    const weekday = d.getDay()
+    const tz = 'America/Argentina/Buenos_Aires'
+    // Determinar día de semana en horario AR
+    const dAr = new Date(`${dateISO}T00:00:00-03:00`)
+    const weekday = dAr.getUTCDay()
     const { data: wins } = await supabase
       .from('service_time_windows')
       .select('start_time,end_time')
       .eq('service_id', svcId)
       .eq('weekday', weekday)
       .order('start_time')
-    const now = new Date()
-    const isToday = new Date().toDateString() === d.toDateString()
+    // Hora actual en AR
+    const nowAr = new Date(new Date().toLocaleString('en-US', { timeZone: tz }))
+    const todayArISO = new Date().toLocaleDateString('en-CA', { timeZone: tz })
+    const isToday = todayArISO === dateISO
     const produced: string[] = []
     for (const w of wins || []) {
       const [sh, sm] = String(w.start_time).split(':').map(Number)
@@ -101,9 +105,9 @@ export default function BookingPage(){
       while (cur + interval <= end) {
         const hh = String(Math.floor(cur / 60)).padStart(2, '0')
         const mm = String(cur % 60).padStart(2, '0')
-        const iso = `${dateISO}T${hh}:${mm}`
-        const dt = new Date(iso)
-        if (!isToday || dt > now) produced.push(`${hh}:${mm}`)
+        // Construir fecha-hora AR para comparar con ahora
+        const dtAr = new Date(`${dateISO}T${hh}:${mm}:00-03:00`)
+        if (!isToday || dtAr > nowAr) produced.push(`${hh}:${mm}`)
         cur += interval
       }
     }
@@ -218,8 +222,8 @@ export default function BookingPage(){
                 <button
                   type="button"
                   key={t}
-                  className={`px-3 py-1 rounded-full text-sm border ${form.start_at.endsWith('T'+t) ? 'bg-pink-500 text-white border-pink-500' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'}`}
-                  onClick={() => setForm(f => ({ ...f, start_at: `${date}T${t}` }))}
+                  className={`px-3 py-1 rounded-full text-sm border ${form.start_at.startsWith(`${date}T${t}`) ? 'bg-pink-500 text-white border-pink-500' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'}`}
+                  onClick={() => setForm(f => ({ ...f, start_at: `${date}T${t}:00-03:00` }))}
                 >{t}</button>
               ))}
             </div>
