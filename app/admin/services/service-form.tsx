@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useFormState } from 'react-dom'
 
 type Category = { id: string; name: string }
 
@@ -10,7 +10,7 @@ type Props = {
 }
 
 export default function ServiceForm({ categories, action }: Props){
-  const [state, formAction] = useActionState(action, null)
+  const [state, formAction] = useFormState(action, null as any)
 
   return (
     <form action={formAction} className="card space-y-6" encType="multipart/form-data">
