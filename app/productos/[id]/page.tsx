@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -10,6 +10,8 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
   const { id } = params
   const [loading, setLoading] = useState(true)
   const [p, setP] = useState<any>(null)
+  const [variants, setVariants] = useState<any[]>([])
+  const [variantId, setVariantId] = useState<string>('')
   const router = useRouter()
 
   useEffect(() => {
@@ -32,6 +34,17 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
         description: data.description,
         category_name: catName || undefined,
       } : null)
+      // variantes del producto (colores)
+      const { data: v } = await supabase
+        .from('product_variants')
+        .select('id,name,color_hex,image_url,sort_order,is_active')
+        .eq('product_id', id)
+        .eq('is_active', true)
+        .order('sort_order')
+        .order('created_at')
+      const vv = v || []
+      setVariants(vv)
+      if (vv.length) setVariantId(vv[0].id)
       setLoading(false)
     }
     run()
@@ -39,9 +52,12 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
 
   const formatPrice = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n || 0)
 
+  const activeVariant = useMemo(() => variants.find(v => v.id === variantId), [variants, variantId])
+
   const consultar = () => {
     if (!p) return
-    const text = encodeURIComponent(`Hola! Me interesa el producto "${p.name}" (${formatPrice(p.price)}). ¿Podrían darme más info?`)
+    const colorTxt = activeVariant ? `, color ${activeVariant.name}` : ''
+    const text = encodeURIComponent(`Hola! Me interesa el producto "${p.name}" (${formatPrice(p.price)}${colorTxt}). ¿Podrían darme más info?`)
     const url = `https://wa.me/?text=${text}`
     window.open(url, '_blank')
   }
@@ -54,11 +70,11 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
       <Link href="/productos" className="text-sm text-pink-600">← Volver a productos</Link>
       <div className="grid md:grid-cols-2 gap-6">
         <div className="rounded-xl overflow-hidden border bg-white aspect-[4/3] relative">
-          {p.image_url ? (
-            <Image src={p.image_url} alt={p.name} fill className="object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Sin imagen</div>
-          )}
+          {(() => {
+            const img = activeVariant?.image_url || p.image_url
+            if (img) return <Image src={img} alt={p.name} fill className="object-cover" />
+            return <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Sin imagen</div>
+          })()}
         </div>
         <div className="space-y-3">
           {p.category_name && <div className="text-xs text-gray-500">{p.category_name}</div>}
@@ -66,6 +82,25 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
           <div className="text-pink-600 font-semibold">{formatPrice(p.price)}</div>
           {p.description && (
             <div className="prose prose-sm max-w-none"><p>{p.description}</p></div>
+          )}
+          {!!variants.length && (
+            <div className="space-y-2 pt-2">
+              <div className="text-sm text-gray-600">Colores</div>
+              <div className="flex flex-wrap gap-2">
+                {variants.map(v => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={()=>setVariantId(v.id)}
+                    className={`px-3 py-1 rounded-full border text-sm flex items-center gap-2 ${variantId===v.id ? 'bg-pink-500 text-white border-pink-500' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'}`}
+                    aria-label={`Color ${v.name}`}
+                  >
+                    <span className="inline-block w-3 h-3 rounded-full border" style={{ background: v.color_hex || '#eee' }} />
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
           <div className="flex gap-2 pt-2">
             <button onClick={consultar} className="px-3 py-2 rounded bg-pink-500 text-white">Consultar por WhatsApp</button>
