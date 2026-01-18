@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormState } from 'react-dom'
 import { useRouter } from 'next/navigation'
 
@@ -24,6 +24,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
   const [tw, setTw] = useState<TimeWindow[]>(windows)
   const router = useRouter()
   const [showTw, setShowTw] = useState(false)
+  const formRef = useRef<HTMLFormElement | null>(null)
 
   const toMinutes = (hhmm: string) => {
     const [h, m] = (hhmm || '00:00').split(':').map(Number)
@@ -64,6 +65,25 @@ export default function ServiceForm({ categories, action, initial, createCategor
     if (catState?.success) router.refresh()
   }, [catState?.success, router])
 
+  // Limpieza automática luego de guardar
+  useEffect(() => {
+    if (!state?.success) return
+    // Si estaba editando, volvemos a /admin/services sin query y refrescamos
+    if (initial?.id) {
+      router.replace('/admin/services')
+      router.refresh()
+      return
+    }
+    // Si es creación, reseteamos formulario y estados locales
+    if (formRef.current) {
+      formRef.current.reset()
+    }
+    setMainPreview(null)
+    setGalleryPreviews(prev => { prev.forEach(u => URL.revokeObjectURL(u)); return [] })
+    setTw([])
+    setShowTw(false)
+  }, [state?.success, initial?.id, router])
+
   return (
     <>
       <div className="card space-y-2 mb-4 border-pink-200">
@@ -76,7 +96,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
         {catState?.success && <div className="text-xs text-green-600">Categoría creada</div>}
       </div>
 
-      <form action={formAction} className="card space-y-6 border-pink-200" encType="multipart/form-data">
+      <form ref={formRef} action={formAction} className="card space-y-8 border-pink-200" encType="multipart/form-data">
       {state?.error && (
         <div className="rounded-md border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{state.error}</div>
       )}
@@ -84,9 +104,9 @@ export default function ServiceForm({ categories, action, initial, createCategor
         <div className="rounded-md border border-green-200 bg-green-50 text-green-700 px-3 py-2 text-sm">Guardado</div>
       )}
 
-      <section className="grid md:grid-cols-2 gap-4">
+      <section className="grid md:grid-cols-2 gap-6">
         {initial?.id && <input type="hidden" name="id" value={initial.id} />}
-        <div className="space-y-2">
+        <div className="space-y-3 p-3 rounded border border-pink-200 bg-pink-50/30">
           <h3 className="font-medium text-pink-700">Básicos</h3>
           <input name="name" placeholder="Nombre" className="w-full border rounded px-3 py-2" required defaultValue={initial?.name || ''} />
           <div className="grid grid-cols-2 gap-2">
@@ -100,7 +120,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
           </div>
           <label className="inline-flex items-center gap-2 text-sm"><input name="is_active" type="checkbox" defaultChecked={initial?.is_active ?? true} /> Activo</label>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3 p-3 rounded border border-pink-200 bg-pink-50/30">
           <h3 className="font-medium text-pink-700">Duración y Precio</h3>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -119,7 +139,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
         </div>
       </section>
 
-      <section className="space-y-3">
+      <section className="space-y-4 p-3 rounded border border-pink-200 bg-pink-50/30">
         <h3 className="font-medium text-pink-700">Agenda</h3>
         <div className="grid md:grid-cols-3 gap-3 items-end">
           <div>
