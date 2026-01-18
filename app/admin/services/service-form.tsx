@@ -37,7 +37,6 @@ export default function ServiceForm({ categories, action, initial, createCategor
 
   return (
     <>
-      {/* Crear categoría (form separado para evitar forms anidados) */}
       <div className="card space-y-2 mb-4">
         <h3 className="font-medium">Categorías</h3>
         <form action={catAction} className="flex gap-2">
@@ -101,6 +100,39 @@ export default function ServiceForm({ categories, action, initial, createCategor
               <option value={30}>30 minutos</option>
               <option value={60}>60 minutos</option>
             </select>
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-12 gap-2 items-end">
+            <div className="col-span-12 text-sm text-gray-600">Agregar rápido Lunes a Viernes</div>
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="09:00" onChange={(e)=>{ (e.target as any)._svStart = e.target.value }} />
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="13:00" onChange={(e)=>{ (e.target as any)._svEnd = e.target.value }} />
+            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm" onClick={(e)=>{
+              const wrap = (e.currentTarget.parentElement as HTMLElement)
+              const inputs = Array.from(wrap.querySelectorAll('input[type="time"]')) as HTMLInputElement[]
+              const s = inputs[0]?.value || '09:00'
+              const t = inputs[1]?.value || '13:00'
+              setTw(prev => ([
+                ...prev,
+                { weekday: 1, start_time: s, end_time: t },
+                { weekday: 2, start_time: s, end_time: t },
+                { weekday: 3, start_time: s, end_time: t },
+                { weekday: 4, start_time: s, end_time: t },
+                { weekday: 5, start_time: s, end_time: t },
+              ]))
+            }}>Agregar</button>
+          </div>
+          <div className="grid grid-cols-12 gap-2 items-end">
+            <div className="col-span-12 text-sm text-gray-600">Agregar rápido Sábado</div>
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="09:00" />
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="13:00" />
+            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm" onClick={(e)=>{
+              const wrap = (e.currentTarget.parentElement as HTMLElement)
+              const inputs = Array.from(wrap.querySelectorAll('input[type="time"]')) as HTMLInputElement[]
+              const s = inputs[0]?.value || '09:00'
+              const t = inputs[1]?.value || '13:00'
+              setTw(prev => ([...prev, { weekday: 6, start_time: s, end_time: t }]))
+            }}>Agregar</button>
           </div>
         </div>
         <div className="space-y-2">
