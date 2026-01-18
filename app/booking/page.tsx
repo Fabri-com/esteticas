@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { z } from 'zod'
 import { normalizeArPhone } from '@/lib/phone'
 
@@ -19,6 +20,8 @@ export default function BookingPage(){
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ service_id: '', start_at: '', full_name: '', phone: '', email: '', notes: '' })
   const [errors, setErrors] = useState<Record<string,string>>({})
+  const [date, setDate] = useState<string>('')
+  const [slots, setSlots] = useState<string[]>([])
 
   useEffect(() => {
     fetch('/api/services').then(r=>r.json()).then(setServices)
@@ -39,6 +42,47 @@ export default function BookingPage(){
       })
     }
   }, [form.phone])
+
+  // Cargar slots cuando cambia servicio o fecha
+  useEffect(() => {
+    const loadSlots = async () => {
+      setSlots([])
+      if (!form.service_id || !date) return
+      const supabase = createClient()
+      // Obtener intervalo del servicio (default 60 si no disponible)
+      const { data: svc } = await supabase.from('services').select('slot_interval_minutes').eq('id', form.service_id).maybeSingle()
+      const interval = svc?.slot_interval_minutes || 60
+      // Obtener ventanas del día seleccionado
+      const d = new Date(date + 'T00:00:00')
+      const weekday = d.getDay() // 0=Dom
+      const { data: wins } = await supabase
+        .from('service_time_windows')
+        .select('start_time,end_time')
+        .eq('service_id', form.service_id)
+        .eq('weekday', weekday)
+        .order('start_time')
+      const now = new Date()
+      const isToday = new Date().toDateString() === d.toDateString()
+      const produced: string[] = []
+      for (const w of wins || []) {
+        // generar slots [start, end) cada 'interval' minutos
+        const [sh, sm] = String(w.start_time).split(':').map(Number)
+        const [eh, em] = String(w.end_time).split(':').map(Number)
+        let cur = sh * 60 + sm
+        const end = eh * 60 + em
+        while (cur + interval <= end) {
+          const hh = String(Math.floor(cur / 60)).padStart(2, '0')
+          const mm = String(cur % 60).padStart(2, '0')
+          const iso = `${date}T${hh}:${mm}`
+          const dt = new Date(iso)
+          if (!isToday || dt > now) produced.push(`${hh}:${mm}`)
+          cur += interval
+        }
+      }
+      setSlots(produced)
+    }
+    loadSlots()
+  }, [form.service_id, date])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,8 +117,24 @@ export default function BookingPage(){
           {errors.service_id && <p className="text-sm text-red-600">{errors.service_id}</p>}
         </div>
         <div>
-          <label className="block text-sm mb-1">Fecha y hora</label>
-          <input type="datetime-local" className="w-full border rounded px-3 py-2" value={form.start_at} onChange={e=>setForm({...form, start_at: e.target.value})} />
+          <label className="block text-sm mb-1">Fecha</label>
+          <input type="date" className="w-full border rounded px-3 py-2" value={date} onChange={e=>setDate(e.target.value)} />
+          {!!slots.length && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {slots.map((t) => (
+                <button
+                  type="button"
+                  key={t}
+                  className={`px-3 py-1 rounded-full text-sm border ${form.start_at.endsWith('T'+t) ? 'bg-pink-500 text-white border-pink-500' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'}`}
+                  onClick={() => setForm(f => ({ ...f, start_at: `${date}T${t}` }))}
+                >{t}</button>
+              ))}
+            </div>
+          )}
+          <div className="mt-3">
+            <label className="block text-xs mb-1 text-gray-600">O elegir fecha y hora manualmente</label>
+            <input type="datetime-local" className="w-full border rounded px-3 py-2" value={form.start_at} onChange={e=>setForm({...form, start_at: e.target.value})} />
+          </div>
           {errors.start_at && <p className="text-sm text-red-600">{errors.start_at}</p>}
         </div>
         <div className="grid md:grid-cols-2 gap-3">

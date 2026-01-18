@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFormState } from 'react-dom'
 import { useRouter } from 'next/navigation'
 
@@ -24,6 +24,34 @@ export default function ServiceForm({ categories, action, initial, createCategor
   const [tw, setTw] = useState<TimeWindow[]>(windows)
   const router = useRouter()
 
+  const toMinutes = (hhmm: string) => {
+    const [h, m] = (hhmm || '00:00').split(':').map(Number)
+    return (h||0) * 60 + (m||0)
+  }
+
+  // Detectar solapamientos por día
+  const overlapIdx = useMemo(() => {
+    const bad = new Set<number>()
+    const byDay: Record<number, Array<{ idx: number, start: number, end: number }>> = {}
+    tw.forEach((r, i) => {
+      const start = toMinutes(r.start_time)
+      const end = toMinutes(r.end_time)
+      if (!byDay[r.weekday]) byDay[r.weekday] = []
+      byDay[r.weekday].push({ idx: i, start, end })
+    })
+    Object.values(byDay).forEach(list => {
+      list.sort((a,b)=>a.start-b.start)
+      let prev = null as null | { idx:number,start:number,end:number }
+      for (const cur of list) {
+        if (prev && cur.start < (prev.end||0)) {
+          bad.add(cur.idx); bad.add(prev.idx)
+        }
+        prev = cur
+      }
+    })
+    return bad
+  }, [tw])
+
   useEffect(() => {
     return () => {
       if (mainPreview) URL.revokeObjectURL(mainPreview)
@@ -37,17 +65,17 @@ export default function ServiceForm({ categories, action, initial, createCategor
 
   return (
     <>
-      <div className="card space-y-2 mb-4">
-        <h3 className="font-medium">Categorías</h3>
+      <div className="card space-y-2 mb-4 border-pink-200">
+        <h3 className="font-medium text-pink-700">Categorías</h3>
         <form action={catAction} className="flex gap-2">
-          <input name="new_category_name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
-          <button type="submit" className="rounded-md border px-3 py-2 text-sm">Agregar</button>
+          <input name="new_category_name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full focus:border-pink-400 focus:ring-1 focus:ring-pink-300" />
+          <button type="submit" className="rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600">Agregar</button>
         </form>
         {catState?.error && <div className="text-xs text-red-600">{catState.error}</div>}
         {catState?.success && <div className="text-xs text-green-600">Categoría creada</div>}
       </div>
 
-      <form action={formAction} className="card space-y-6" encType="multipart/form-data">
+      <form action={formAction} className="card space-y-6 border-pink-200" encType="multipart/form-data">
       {state?.error && (
         <div className="rounded-md border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">{state.error}</div>
       )}
@@ -58,7 +86,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
       <section className="grid md:grid-cols-2 gap-4">
         {initial?.id && <input type="hidden" name="id" value={initial.id} />}
         <div className="space-y-2">
-          <h3 className="font-medium">Básicos</h3>
+          <h3 className="font-medium text-pink-700">Básicos</h3>
           <input name="name" placeholder="Nombre" className="w-full border rounded px-3 py-2" required defaultValue={initial?.name || ''} />
           <div className="grid grid-cols-2 gap-2">
             <select name="category_id" className="border rounded px-3 py-2" defaultValue={initial?.category_id || ''}>
@@ -72,7 +100,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
           <label className="inline-flex items-center gap-2 text-sm"><input name="is_active" type="checkbox" defaultChecked={initial?.is_active ?? true} /> Activo</label>
         </div>
         <div className="space-y-2">
-          <h3 className="font-medium">Duración y Precio</h3>
+          <h3 className="font-medium text-pink-700">Duración y Precio</h3>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Duración</label>
@@ -91,7 +119,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
       </section>
 
       <section className="space-y-3">
-        <h3 className="font-medium">Agenda</h3>
+        <h3 className="font-medium text-pink-700">Agenda</h3>
         <div className="grid md:grid-cols-3 gap-3 items-end">
           <div>
             <label className="block text-xs text-gray-600 mb-1">Intervalo de turnos</label>
@@ -107,7 +135,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
             <div className="col-span-12 text-sm text-gray-600">Agregar rápido Lunes a Viernes</div>
             <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="09:00" onChange={(e)=>{ (e.target as any)._svStart = e.target.value }} />
             <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="13:00" onChange={(e)=>{ (e.target as any)._svEnd = e.target.value }} />
-            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm" onClick={(e)=>{
+            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600" onClick={(e)=>{
               const wrap = (e.currentTarget.parentElement as HTMLElement)
               const inputs = Array.from(wrap.querySelectorAll('input[type="time"]')) as HTMLInputElement[]
               const s = inputs[0]?.value || '09:00'
@@ -121,12 +149,39 @@ export default function ServiceForm({ categories, action, initial, createCategor
                 { weekday: 5, start_time: s, end_time: t },
               ]))
             }}>Agregar</button>
+            <div className="col-span-12 flex gap-2 mt-2">
+              <button type="button" className="rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600" onClick={() => {
+                setTw(prev => ([
+                  ...prev,
+                  { weekday: 1, start_time: '09:00', end_time: '13:00' },
+                  { weekday: 1, start_time: '16:00', end_time: '22:00' },
+                  { weekday: 2, start_time: '09:00', end_time: '13:00' },
+                  { weekday: 2, start_time: '16:00', end_time: '22:00' },
+                  { weekday: 3, start_time: '09:00', end_time: '13:00' },
+                  { weekday: 3, start_time: '16:00', end_time: '22:00' },
+                  { weekday: 4, start_time: '09:00', end_time: '13:00' },
+                  { weekday: 4, start_time: '16:00', end_time: '22:00' },
+                  { weekday: 5, start_time: '09:00', end_time: '13:00' },
+                  { weekday: 5, start_time: '16:00', end_time: '22:00' },
+                ]))
+              }}>L–V: 09–13 y 16–22</button>
+              <button type="button" className="rounded-md border px-3 py-2 text-sm bg-pink-100 text-pink-700 hover:bg-pink-200" onClick={() => {
+                setTw(prev => ([
+                  ...prev,
+                  { weekday: 1, start_time: '09:00', end_time: '22:00' },
+                  { weekday: 2, start_time: '09:00', end_time: '22:00' },
+                  { weekday: 3, start_time: '09:00', end_time: '22:00' },
+                  { weekday: 4, start_time: '09:00', end_time: '22:00' },
+                  { weekday: 5, start_time: '09:00', end_time: '22:00' },
+                ]))
+              }}>L–V: 09–22</button>
+            </div>
           </div>
           <div className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-12 text-sm text-gray-600">Agregar rápido Sábado</div>
             <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="09:00" />
             <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="13:00" />
-            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm" onClick={(e)=>{
+            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600" onClick={(e)=>{
               const wrap = (e.currentTarget.parentElement as HTMLElement)
               const inputs = Array.from(wrap.querySelectorAll('input[type="time"]')) as HTMLInputElement[]
               const s = inputs[0]?.value || '09:00'
@@ -139,7 +194,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
           <div className="text-sm text-gray-600">Franjas por día</div>
           <div className="space-y-2">
             {tw.map((row, idx) => (
-              <div key={idx} className="grid grid-cols-12 gap-2 items-end">
+              <div key={idx} className={`grid grid-cols-12 gap-2 items-end ${overlapIdx.has(idx) ? 'bg-red-50 border border-red-300 rounded p-2' : ''}`}>
                 <select name="tw_weekday" defaultValue={row.weekday} className="col-span-4 border rounded px-3 py-2">
                   <option value={0}>Domingo</option>
                   <option value={1}>Lunes</option>
@@ -151,21 +206,36 @@ export default function ServiceForm({ categories, action, initial, createCategor
                 </select>
                 <input name="tw_start" type="time" defaultValue={row.start_time} className="col-span-3 border rounded px-3 py-2" />
                 <input name="tw_end" type="time" defaultValue={row.end_time} className="col-span-3 border rounded px-3 py-2" />
-                <button type="button" className="col-span-2 rounded-md border px-3 py-2 text-sm" onClick={() => setTw(tw.filter((_,i)=>i!==idx))}>Eliminar</button>
+                <button type="button" className="col-span-2 rounded-md border px-3 py-2 text-sm bg-red-500 text-white hover:bg-red-600" onClick={() => setTw(tw.filter((_,i)=>i!==idx))}>Eliminar</button>
+                {overlapIdx.has(idx) && (
+                  <div className="col-span-12 text-xs text-red-700 mt-1">Esta franja se solapa con otra del mismo día</div>
+                )}
               </div>
             ))}
           </div>
-          <button
-            type="button"
-            className="rounded-md border px-3 py-2 text-sm"
-            onClick={() => setTw([...tw, { weekday: 1, start_time: '09:00', end_time: '13:00' }])}
-          >Agregar franja</button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600"
+              onClick={() => setTw([...tw, { weekday: 1, start_time: '09:00', end_time: '13:00' }])}
+            >Agregar franja</button>
+            <button
+              type="button"
+              className="rounded-md border px-3 py-2 text-sm bg-red-50 text-red-700 hover:bg-red-100 border-red-300"
+              onClick={() => setTw([])}
+            >Limpiar todas</button>
+          </div>
+          {!!overlapIdx.size && (
+            <div className="mt-2 rounded border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">
+              Hay franjas solapadas. Podés guardar igual, pero te recomiendo ajustarlas para evitar confusión en la agenda.
+            </div>
+          )}
         </div>
       </section>
 
       <section className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <h3 className="font-medium">Imágenes</h3>
+          <h3 className="font-medium text-pink-700">Imágenes</h3>
           {(!mainPreview && initial?.image_url) && (
             <div className="text-xs text-gray-600">Imagen actual</div>
           )}
