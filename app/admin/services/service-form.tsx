@@ -308,6 +308,8 @@ export default function ServiceForm({ categories, action, initial, createCategor
       </section>
 
       <div className="flex justify-end">
+        {/* Enviar siempre las franjas aunque esté colapsado */}
+        <input type="hidden" name="tw_json" value={JSON.stringify(tw)} />
         <button className="btn">Guardar</button>
       </div>
     </form>

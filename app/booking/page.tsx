@@ -83,8 +83,8 @@ export default function BookingPage(){
     const { data: svc } = await supabase.from('services').select('slot_interval_minutes').eq('id', svcId).maybeSingle()
     const interval = svc?.slot_interval_minutes || 60
     const tz = 'America/Argentina/Buenos_Aires'
-    // Determinar día de semana en horario AR
-    const dAr = new Date(`${dateISO}T00:00:00-03:00`)
+    // Determinar día de semana en horario AR (usar mediodía para evitar saltos por DST)
+    const dAr = new Date(`${dateISO}T12:00:00-03:00`)
     const weekday = dAr.getUTCDay()
     const { data: wins } = await supabase
       .from('service_time_windows')
