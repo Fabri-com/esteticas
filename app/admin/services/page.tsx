@@ -173,6 +173,9 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
       ]
       const { error: defErr } = await supabase.from('service_time_windows').insert(defaults.map(r => ({ service_id: serviceId, ...r })))
       if (defErr && (defErr as any)?.code !== '42P01') return { error: `No se pudieron guardar las franjas por defecto: ${defErr.message}` }
+    } else {
+      // Edición sin franjas: no permitir
+      return { error: 'Agregá al menos una franja horaria antes de guardar.' }
     }
     revalidatePath('/admin/services')
     return { success: true }

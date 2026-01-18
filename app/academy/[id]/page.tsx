@@ -5,6 +5,53 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
+function Icon({ name, className = 'w-4 h-4 text-pink-600' }: { name: string; className?: string }){
+  switch (name) {
+    case 'calendar':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      )
+    case 'clock':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      )
+    case 'hourglass':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><path d="M6 2h12M6 22h12"/><path d="M7 2c0 5 5 6 5 10s-5 5-5 10"/><path d="M17 2c0 5-5 6-5 10s5 5 5 10"/></svg>
+      )
+    case 'users':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      )
+    case 'teacher':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><path d="M2 7l10-5 10 5-10 5L2 7z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      )
+    case 'certificate':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><circle cx="12" cy="8" r="5"/><path d="M8 15l-2 7 6-3 6 3-2-7"/></svg>
+      )
+    case 'book':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"/></svg>
+      )
+    case 'list':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      )
+    case 'check':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><path d="M20 6L9 17l-5-5"/></svg>
+      )
+    case 'gift':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8v12"/><path d="M12 8H7.5a2.5 2.5 0 1 1 0-5C11 3 12 8 12 8Z"/><path d="M12 8h4.5a2.5 2.5 0 1 0 0-5C13 3 12 8 12 8Z"/></svg>
+      )
+    default:
+      return null
+  }
+}
+
 export default function CourseDetail({ params }: { params: { id: string } }){
   const { id } = params
   const [loading, setLoading] = useState(true)
@@ -98,28 +145,28 @@ export default function CourseDetail({ params }: { params: { id: string } }){
 
           {c.description && (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2">Sobre el curso</div>
+              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="book" /> <span>Sobre el curso</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.description}</div>
             </div>
           )}
 
           {c.program_md && (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2">Programa del curso</div>
+              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="list" /> <span>Programa del curso</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.program_md}</div>
             </div>
           )}
 
           {c.requirements_md && (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2">Requisitos</div>
+              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="check" /> <span>Requisitos</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.requirements_md}</div>
             </div>
           )}
 
           {c.includes_md && (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2">Qué incluye el curso</div>
+              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="gift" /> <span>Qué incluye el curso</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.includes_md}</div>
             </div>
           )}
@@ -135,19 +182,19 @@ export default function CourseDetail({ params }: { params: { id: string } }){
               <div className="h-px bg-gray-200" />
               <div className="space-y-3 text-sm text-gray-700">
                 {c.start_date && (
-                  <div className="flex items-start gap-2"><span>📅</span><div><div className="text-gray-500 text-xs">Inicio</div><div>{formatDate(c.start_date)}</div></div></div>
+                  <div className="flex items-start gap-2"><Icon name="calendar" /><div><div className="text-gray-500 text-xs">Inicio</div><div>{formatDate(c.start_date)}</div></div></div>
                 )}
                 {c.schedule_text && (
-                  <div className="flex items-start gap-2"><span>⏰</span><div><div className="text-gray-500 text-xs">Horarios</div><div>{c.schedule_text}</div></div></div>
+                  <div className="flex items-start gap-2"><Icon name="clock" /><div><div className="text-gray-500 text-xs">Horarios</div><div>{c.schedule_text}</div></div></div>
                 )}
                 {c.duration_weeks!=null && (
-                  <div className="flex items-start gap-2"><span>🕑</span><div><div className="text-gray-500 text-xs">Duración</div><div>{c.duration_weeks} semanas</div></div></div>
+                  <div className="flex items-start gap-2"><Icon name="hourglass" /><div><div className="text-gray-500 text-xs">Duración</div><div>{c.duration_weeks} semanas</div></div></div>
                 )}
                 {(c.seats!=null || c.seats_available!=null) && (
-                  <div className="flex items-start gap-2"><span>👥</span><div><div className="text-gray-500 text-xs">Cupos disponibles</div><div>{c.seats_available!=null ? c.seats_available : '-'}{c.seats!=null ? ` de ${c.seats} lugares` : ''}</div></div></div>
+                  <div className="flex items-start gap-2"><Icon name="users" /><div><div className="text-gray-500 text-xs">Cupos disponibles</div><div>{c.seats_available!=null ? c.seats_available : '-'}{c.seats!=null ? ` de ${c.seats} lugares` : ''}</div></div></div>
                 )}
                 {c.teacher && (
-                  <div className="flex items-start gap-2"><span>🎓</span><div><div className="text-gray-500 text-xs">Profesor</div><div>{c.teacher}</div></div></div>
+                  <div className="flex items-start gap-2"><Icon name="teacher" /><div><div className="text-gray-500 text-xs">Profesor</div><div>{c.teacher}</div></div></div>
                 )}
               </div>
 
@@ -157,9 +204,12 @@ export default function CourseDetail({ params }: { params: { id: string } }){
               </div>
 
               {c.certificate_included && (
-                <div className="rounded-lg bg-pink-50 border border-pink-100 p-3 text-sm text-pink-800">
-                  <div className="font-medium mb-1">Certificado incluido</div>
-                  <div>Recibirás un certificado oficial avalado al completar el curso</div>
+                <div className="rounded-lg bg-gradient-to-r from-pink-50 to-white border border-pink-100 p-3 text-sm text-pink-800 flex items-start gap-2">
+                  <Icon name="certificate" className="w-5 h-5 text-pink-600" />
+                  <div>
+                    <div className="font-medium">Certificado incluido</div>
+                    <div className="text-pink-700/90">Recibirás un certificado oficial avalado al completar el curso</div>
+                  </div>
                 </div>
               )}
             </div>
