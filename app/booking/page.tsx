@@ -227,10 +227,7 @@ export default function BookingPage(){
           {!slotsLoading && form.service_id && date && slots.length===0 && (
             <div className="mt-3 text-sm text-gray-500">No hay horarios disponibles para esta fecha.</div>
           )}
-          <div className="mt-3">
-            <label className="block text-xs mb-1 text-gray-600">O elegir fecha y hora manualmente</label>
-            <input type="datetime-local" className="w-full border rounded px-3 py-2" value={form.start_at} onChange={e=>setForm({...form, start_at: e.target.value})} />
-          </div>
+          
           {errors.start_at && <p className="text-sm text-red-600">{errors.start_at}</p>}
         </div>
         {!!form.service_id && (
