@@ -55,7 +55,7 @@ export default async function ServicesPage({ searchParams }: PageProps) {
       {/* Tarjetas de servicios */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {data?.map(s => (
-          <div key={s.id} className="card overflow-hidden">
+          <div key={s.id} className="rounded-xl overflow-hidden border bg-white hover:shadow-md transition">
             <div className="relative">
               {s.image_url ? (
                 <img src={s.image_url} alt={s.name} className="w-full h-44 object-cover" />
@@ -69,21 +69,18 @@ export default async function ServicesPage({ searchParams }: PageProps) {
                 ) : null
               })()}
             </div>
-            <div className="p-4 space-y-2">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-medium">{s.name}</h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">{s.description}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="font-semibold inline-flex items-center gap-1">
-                    <DuoIcon name="money" className="w-4 h-4" />
-                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}
-                  </div>
-                  <div className="text-xs text-gray-500 inline-flex items-center gap-1"><DuoIcon name="timer" className="w-3.5 h-3.5" /> {s.duration_minutes} min</div>
-                </div>
+            <div className="p-4 space-y-3">
+              <h3 className="font-medium">{s.name}</h3>
+              <p className="text-sm text-gray-600 line-clamp-3">{s.description}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs bg-pink-50 text-pink-700 border-pink-200">
+                  <DuoIcon name="timer" className="w-3.5 h-3.5" /> {s.duration_minutes} min
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs">
+                  <DuoIcon name="money" className="w-4 h-4" /> {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}
+                </span>
               </div>
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <Link href={`/services/${s.id}`} className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">Ver más</Link>
                 <Link href="/booking" className="btn px-3 py-1.5 text-sm">Reservar</Link>
               </div>
