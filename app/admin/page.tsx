@@ -12,10 +12,16 @@ async function requireAdmin() {
 
 export default async function AdminDashboard() {
   const supabase = await requireAdmin()
-  const today = new Date()
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const tz = 'America/Argentina/Buenos_Aires'
+  const todayArISO = new Date().toLocaleDateString('en-CA', { timeZone: tz })
+  const start = new Date(`${todayArISO}T00:00:00-03:00`)
   const end = new Date(start); end.setDate(end.getDate() + 1)
-  const { data: appts } = await supabase.from('appointments').select('id,start_at,end_at,status,notes, customers(full_name,phone), services(name)').gte('start_at', start.toISOString()).lt('start_at', end.toISOString()).order('start_at')
+  const { data: appts } = await supabase
+    .from('appointments')
+    .select('id,start_at,end_at,status,notes, customers(full_name,phone), services(name)')
+    .gte('start_at', start.toISOString())
+    .lt('start_at', end.toISOString())
+    .order('start_at')
 
   async function updateStatus(formData: FormData) {
     'use server'
@@ -46,7 +52,7 @@ export default async function AdminDashboard() {
         {appts?.map(a => (
           <div key={a.id} className="card flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">{new Date(a.start_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(a.end_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+              <div className="text-sm text-gray-500">{new Date(a.start_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })} - {new Date(a.end_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })}</div>
               {(() => {
                 const serviceName = Array.isArray(a.services) ? a.services[0]?.name : (a.services as any)?.name
                 const customerName = Array.isArray(a.customers) ? a.customers[0]?.full_name : (a.customers as any)?.full_name

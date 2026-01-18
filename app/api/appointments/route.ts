@@ -30,8 +30,11 @@ export async function POST(req: Request) {
   }).select('id').single()
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
-
-  const text = `Hola! Soy ${full_name}. Quiero reservar ${service.name} el ${start.toLocaleDateString()} a las ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. ID: ${appt.id}${notes ? `. Notas: ${notes}` : ''}`
+  // Formatear fecha/hora en AR y 24hs
+  const tz = 'America/Argentina/Buenos_Aires'
+  const dateAr = start.toLocaleDateString('es-AR', { timeZone: tz })
+  const timeAr = start.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })
+  const text = `Hola! Soy ${full_name}. Quiero reservar ${service.name} el ${dateAr} a las ${timeAr}. ID: ${appt.id}${notes ? `. Notas: ${notes}` : ''}`
   const link = `https://wa.me/${process.env.BUSINESS_WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
 
   return new Response(JSON.stringify({ id: appt.id, whatsapp_link: link }), { status: 200 })
