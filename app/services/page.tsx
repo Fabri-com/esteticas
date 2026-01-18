@@ -5,10 +5,19 @@ type PageProps = { searchParams?: { cat?: string } }
 
 export default async function ServicesPage({ searchParams }: PageProps) {
   const supabase = createClient()
-  const { data: categories } = await supabase
+  const { data: categoriesRaw } = await supabase
     .from('service_categories')
     .select('id,name')
     .order('name')
+  const order = ['Manos', 'Pies', 'Pestañas', 'Skincare', 'Combos']
+  const categories = (categoriesRaw || []).slice().sort((a, b) => {
+    const ia = order.indexOf(a.name)
+    const ib = order.indexOf(b.name)
+    if (ia === -1 && ib === -1) return a.name.localeCompare(b.name)
+    if (ia === -1) return 1
+    if (ib === -1) return -1
+    return ia - ib
+  })
 
   const cat = searchParams?.cat || ''
 

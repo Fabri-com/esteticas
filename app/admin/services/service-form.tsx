@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useFormState } from 'react-dom'
 
 type Category = { id: string; name: string }
@@ -8,10 +9,21 @@ type Props = {
   categories: Category[]
   action: (prevState: any, formData: FormData) => Promise<{ success?: boolean; error?: string } | undefined>
   initial?: any | null
+  createCategory?: (prevState: any, formData: FormData) => Promise<{ success?: boolean; error?: string } | undefined>
 }
 
-export default function ServiceForm({ categories, action, initial }: Props){
+export default function ServiceForm({ categories, action, initial, createCategory }: Props){
   const [state, formAction] = useFormState(action, null as any)
+  const [catState, catAction] = useFormState(createCategory || (async()=>undefined) as any, null as any)
+  const [mainPreview, setMainPreview] = useState<string | null>(null)
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
+
+  useEffect(() => {
+    return () => {
+      if (mainPreview) URL.revokeObjectURL(mainPreview)
+      galleryPreviews.forEach(u => URL.revokeObjectURL(u))
+    }
+  }, [mainPreview, galleryPreviews])
 
   return (
     <form action={formAction} className="card space-y-6" encType="multipart/form-data">
@@ -34,7 +46,14 @@ export default function ServiceForm({ categories, action, initial }: Props){
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <input name="category" placeholder="Etiqueta opcional" className="border rounded px-3 py-2" defaultValue={initial?.category || ''} />
+            <div className="space-y-1">
+              <form action={catAction} className="flex gap-2">
+                <input name="name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
+                <button type="submit" className="rounded-md border px-3 py-2 text-sm">Agregar</button>
+              </form>
+              {catState?.error && <div className="text-xs text-red-600">{catState.error}</div>}
+              {catState?.success && <div className="text-xs text-green-600">Categoría creada</div>}
+            </div>
           </div>
           <label className="inline-flex items-center gap-2 text-sm"><input name="is_active" type="checkbox" defaultChecked={initial?.is_active ?? true} /> Activo</label>
         </div>
@@ -60,11 +79,57 @@ export default function ServiceForm({ categories, action, initial }: Props){
       <section className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <h3 className="font-medium">Imágenes</h3>
-          <input name="image_url" placeholder="URL imagen principal (opcional)" className="w-full border rounded px-3 py-2" defaultValue={initial?.image_url || ''} />
-          <input name="image_file" type="file" accept="image/*" className="w-full border rounded px-3 py-2" />
+          {(!mainPreview && initial?.image_url) && (
+            <div className="text-xs text-gray-600">Imagen actual</div>
+          )}
+          <div className="flex gap-3 items-start">
+            <input
+              name="image_file"
+              type="file"
+              accept="image/*"
+              className="border rounded px-3 py-2"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) {
+                  const url = URL.createObjectURL(f)
+                  setMainPreview(prev => {
+                    if (prev) URL.revokeObjectURL(prev)
+                    return url
+                  })
+                } else {
+                  setMainPreview(null)
+                }
+              }}
+            />
+            {(mainPreview || initial?.image_url) && (
+              <img src={mainPreview || initial?.image_url} alt="preview" className="w-24 h-24 object-cover rounded border" />
+            )}
+          </div>
           <div>
             <label className="block text-xs text-gray-600 mb-1">Galería (múltiples imágenes)</label>
-            <input name="gallery_files" type="file" multiple accept="image/*" className="w-full border rounded px-3 py-2" />
+            <input
+              name="gallery_files"
+              type="file"
+              multiple
+              accept="image/*"
+              className="w-full border rounded px-3 py-2"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || [])
+                const urls = files.map(f => URL.createObjectURL(f))
+                // revoke previous
+                setGalleryPreviews(prev => {
+                  prev.forEach(u => URL.revokeObjectURL(u))
+                  return urls
+                })
+              }}
+            />
+            {!!galleryPreviews.length && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {galleryPreviews.slice(0,6).map((u, i) => (
+                  <img key={i} src={u} alt="galeria" className="w-16 h-16 object-cover rounded border" />
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-2">
