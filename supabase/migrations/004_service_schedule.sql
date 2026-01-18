@@ -14,5 +14,29 @@ create index if not exists idx_service_time_windows_service_week on service_time
 
 -- RLS
 alter table service_time_windows enable row level security;
-create policy if not exists service_time_windows_read_public on service_time_windows for select using (true);
-create policy if not exists service_time_windows_write_auth on service_time_windows for all to authenticated using (true) with check (true);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = current_schema()
+      and policyname = 'service_time_windows_read_public'
+      and tablename = 'service_time_windows'
+  ) then
+    create policy service_time_windows_read_public
+      on service_time_windows for select using (true);
+  end if;
+end$$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = current_schema()
+      and policyname = 'service_time_windows_write_auth'
+      and tablename = 'service_time_windows'
+  ) then
+    create policy service_time_windows_write_auth
+      on service_time_windows for all to authenticated using (true) with check (true);
+  end if;
+end$$;
