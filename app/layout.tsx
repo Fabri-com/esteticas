@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Estética',
@@ -14,9 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Header />
         <main className="container py-8">{children}</main>
-        <footer className="border-t mt-16">
-          <div className="container py-8 text-sm text-gray-500">© {new Date().getFullYear()} Estética</div>
-        </footer>
+        <Footer />
       </body>
     </html>
   )
