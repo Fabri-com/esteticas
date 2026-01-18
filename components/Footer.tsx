@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import DuoIcon from '@/components/ui/duo-icon'
 
 export default function Footer(){
   return (
@@ -35,10 +36,18 @@ export default function Footer(){
         <div>
           <div className="font-medium mb-2">Redes Sociales</div>
           <div className="flex items-center gap-3 text-pink-600">
-            <a href="#" aria-label="Instagram" className="w-9 h-9 rounded-full bg-white border grid place-items-center">⌁</a>
-            <a href="#" aria-label="Facebook" className="w-9 h-9 rounded-full bg-white border grid place-items-center">f</a>
-            <a href="#" aria-label="WhatsApp" className="w-9 h-9 rounded-full bg-white border grid place-items-center">☎</a>
-            <a href="#" aria-label="Email" className="w-9 h-9 rounded-full bg-white border grid place-items-center">✉</a>
+            <a href="#" aria-label="Instagram" className="w-9 h-9 rounded-full bg-white border grid place-items-center">
+              <DuoIcon name="instagram" className="w-5 h-5" />
+            </a>
+            <a href="#" aria-label="Facebook" className="w-9 h-9 rounded-full bg-white border grid place-items-center">
+              <DuoIcon name="facebook" className="w-5 h-5" />
+            </a>
+            <a href="#" aria-label="WhatsApp" className="w-9 h-9 rounded-full bg-white border grid place-items-center">
+              <DuoIcon name="whatsapp" className="w-5 h-5" />
+            </a>
+            <a href="#" aria-label="Email" className="w-9 h-9 rounded-full bg-white border grid place-items-center">
+              <DuoIcon name="mail" className="w-5 h-5" />
+            </a>
           </div>
         </div>
       </div>

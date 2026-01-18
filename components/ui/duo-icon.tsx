@@ -3,7 +3,7 @@
 import React from 'react'
 
 type Props = {
-  name: 'calendar'|'clock'|'hourglass'|'users'|'teacher'|'certificate'|'book'|'list'|'check'|'gift'|'money'|'timer'
+  name: 'calendar'|'clock'|'hourglass'|'users'|'teacher'|'certificate'|'book'|'list'|'check'|'gift'|'money'|'timer'|'instagram'|'facebook'|'whatsapp'|'mail'
   className?: string
   fg?: string
   bg?: string
@@ -120,6 +120,38 @@ export default function DuoIcon({ name, className = 'w-4 h-4', fg = '#ec4899', b
           <circle cx="12" cy="13" r="8" {...soft} />
           <circle cx="12" cy="13" r="8" />
           <path d="M12 9v5l3 3" />
+        </svg>
+      )
+    case 'instagram':
+      return (
+        <svg viewBox="0 0 24 24" {...common}>
+          <rect x="3" y="3" width="18" height="18" rx="5" {...soft} />
+          <rect x="3" y="3" width="18" height="18" rx="5" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="17" cy="7" r="1.25" />
+        </svg>
+      )
+    case 'facebook':
+      return (
+        <svg viewBox="0 0 24 24" {...common}>
+          <rect x="3" y="3" width="18" height="18" rx="3" {...soft} />
+          <path d="M14 8h2V5h-2a4 4 0 0 0-4 4v2H8v3h2v5h3v-5h2.2l.8-3H13V9a1 1 0 0 1 1-1z" />
+        </svg>
+      )
+    case 'whatsapp':
+      return (
+        <svg viewBox="0 0 24 24" {...common}>
+          <path d="M3 20l1.5-4.5A8 8 0 1 1 12 20a8.3 8.3 0 0 1-3-.6L3 20z" {...soft} />
+          <path d="M3 20l1.5-4.5A8 8 0 1 1 12 20a8.3 8.3 0 0 1-3-.6L3 20z" />
+          <path d="M8.5 9.5c.5-1 1-1 1.5-.5l1 1c.5.5.5 1 0 1.5l-.3.3c.6 1.1 1.5 2 2.6 2.6l.3-.3c.5-.5 1-.5 1.5 0l1 1c.5.5.5 1-.5 1.5-1.2.6-2.6.5-4.4-.6-1.7-1-3-2.4-3.7-3.7-.7-1.3-.7-2.3 0-2.8z" />
+        </svg>
+      )
+    case 'mail':
+      return (
+        <svg viewBox="0 0 24 24" {...common}>
+          <rect x="3" y="5" width="18" height="14" rx="2" {...soft} />
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 7l9 6 9-6" />
         </svg>
       )
     default:

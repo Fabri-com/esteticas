@@ -18,9 +18,17 @@ export default function CourseForm({
   const [newCatName, setNewCatName] = useState('')
   const [state, formAction] = useFormState(action, null as any)
   const [catState, catAction] = useFormState(createCategory, null as any)
+  // Structured editors
+  type Module = { title: string; items: string[] }
+  const [program, setProgram] = useState<Module[]>(initial?.program_json || [])
+  const [requirements, setRequirements] = useState<string[]>(initial?.requirements_json || [])
+  const [includes, setIncludes] = useState<string[]>(initial?.includes_json || [])
 
   useEffect(() => {
     setImagePreview(initial?.image_url || null)
+    if (initial?.program_json) setProgram(initial.program_json)
+    if (initial?.requirements_json) setRequirements(initial.requirements_json)
+    if (initial?.includes_json) setIncludes(initial.includes_json)
   }, [initial])
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,6 +127,59 @@ export default function CourseForm({
           <textarea name="description" defaultValue={initial?.description || ''} rows={4} className="w-full border rounded px-3 py-2" />
         </div>
 
+        {/* Structured editors */}
+        <div className="space-y-4 p-3 rounded border border-pink-200 bg-pink-50/30">
+          <h3 className="font-medium text-pink-700">Programa (módulos)</h3>
+          <div className="space-y-3">
+            {program.map((m, mi) => (
+              <div key={mi} className="rounded border bg-white p-3 space-y-2">
+                <div className="flex gap-2 items-center">
+                  <input
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    placeholder={`Módulo ${mi+1}: título`}
+                    value={m.title}
+                    onChange={e=>setProgram(prev=>prev.map((mm,i)=> i===mi ? { ...mm, title: e.target.value } : mm))}
+                  />
+                  <button type="button" className="rounded border px-2 py-1 text-sm bg-red-50 text-red-700" onClick={()=>setProgram(program.filter((_,i)=>i!==mi))}>Eliminar</button>
+                </div>
+                <div className="space-y-2">
+                  {m.items.map((it, ii) => (
+                    <div key={ii} className="flex gap-2 items-center">
+                      <input className="w-full border rounded px-2 py-1 text-sm" placeholder={`Ítem ${ii+1}`} value={it} onChange={e=>setProgram(prev=>prev.map((mm,i)=> i===mi ? { ...mm, items: mm.items.map((v,j)=> j===ii ? e.target.value : v) } : mm))} />
+                      <button type="button" className="rounded border px-2 py-1 text-sm" onClick={()=>setProgram(prev=>prev.map((mm,i)=> i===mi ? { ...mm, items: mm.items.filter((_,j)=>j!==ii) } : mm))}>Quitar</button>
+                    </div>
+                  ))}
+                  <button type="button" className="rounded border px-2 py-1 text-sm bg-pink-500 text-white" onClick={()=>setProgram(prev=>prev.map((mm,i)=> i===mi ? { ...mm, items: [...mm.items, ''] } : mm))}>Agregar ítem</button>
+                </div>
+              </div>
+            ))}
+            <button type="button" className="rounded border px-3 py-1.5 text-sm" onClick={()=>setProgram([...program, { title: '', items: [''] }])}>Agregar módulo</button>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2 p-3 rounded border border-pink-200 bg-pink-50/30">
+            <h3 className="font-medium text-pink-700">Requisitos</h3>
+            {requirements.map((r, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <input className="w-full border rounded px-2 py-1 text-sm" placeholder={`Requisito ${i+1}`} value={r} onChange={e=>setRequirements(prev=>prev.map((v,ii)=> ii===i ? e.target.value : v))} />
+                <button type="button" className="rounded border px-2 py-1 text-sm" onClick={()=>setRequirements(requirements.filter((_,ii)=>ii!==i))}>Quitar</button>
+              </div>
+            ))}
+            <button type="button" className="rounded border px-3 py-1.5 text-sm" onClick={()=>setRequirements([...requirements, ''])}>Agregar requisito</button>
+          </div>
+          <div className="space-y-2 p-3 rounded border border-pink-200 bg-pink-50/30">
+            <h3 className="font-medium text-pink-700">Incluye</h3>
+            {includes.map((r, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <input className="w-full border rounded px-2 py-1 text-sm" placeholder={`Ítem ${i+1}`} value={r} onChange={e=>setIncludes(prev=>prev.map((v,ii)=> ii===i ? e.target.value : v))} />
+                <button type="button" className="rounded border px-2 py-1 text-sm" onClick={()=>setIncludes(includes.filter((_,ii)=>ii!==i))}>Quitar</button>
+              </div>
+            ))}
+            <button type="button" className="rounded border px-3 py-1.5 text-sm" onClick={()=>setIncludes([...includes, ''])}>Agregar ítem</button>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-2 md:col-span-1">
             <label className="text-sm">Programa (Markdown)</label>
@@ -145,6 +206,10 @@ export default function CourseForm({
         </div>
 
         <div className="flex gap-2">
+          {/* Hidden JSON payloads */}
+          <input type="hidden" name="program_json" value={JSON.stringify(program)} />
+          <input type="hidden" name="requirements_json" value={JSON.stringify(requirements)} />
+          <input type="hidden" name="includes_json" value={JSON.stringify(includes)} />
           <button className="px-4 py-2 rounded bg-pink-500 text-white">Guardar</button>
         </div>
       </form>

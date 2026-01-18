@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import DuoIcon from '@/components/ui/duo-icon'
 
 type Props = { params: { id: string } }
 
@@ -42,28 +43,30 @@ export default async function ServiceDetailPage({ params }: Props) {
 
         <div className="space-y-4">
           {catName ? (
-            <span className="inline-block text-xs bg-pink-100 text-pink-700 rounded-full px-2 py-1">{catName}</span>
+            <span className="inline-flex items-center gap-1 text-xs bg-pink-100 text-pink-700 rounded-full px-2 py-1">
+              <DuoIcon name="list" className="w-3.5 h-3.5" /> {catName}
+            </span>
           ) : null}
           <h1 className="text-2xl font-semibold">{service.name}</h1>
           <p className="text-gray-700">{service.description}</p>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border p-4 bg-white">
-              <div className="text-xs text-gray-500">Duración</div>
+              <div className="text-xs text-gray-500 flex items-center gap-1"><DuoIcon name="timer" className="w-4 h-4" /> Duración</div>
               <div className="font-medium">{service.duration_minutes} minutos</div>
             </div>
             <div className="rounded-xl border p-4 bg-pink-50 text-pink-700">
-              <div className="text-xs">Precio</div>
+              <div className="text-xs flex items-center gap-1"><DuoIcon name="money" className="w-4 h-4" /> Precio</div>
               <div className="font-semibold">{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(service.price ?? 0))}</div>
             </div>
           </div>
 
           {!!(service.includes?.length) && (
             <div>
-              <h3 className="font-medium mb-2">El servicio incluye:</h3>
+              <h3 className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="gift" className="w-4 h-4" /> El servicio incluye</h3>
               <ul className="space-y-1 text-sm">
                 {service.includes!.map((it: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2"><span className="text-pink-600">•</span><span>{it}</span></li>
+                  <li key={i} className="flex items-start gap-2"><DuoIcon name="check" className="w-4 h-4" /><span>{it}</span></li>
                 ))}
               </ul>
             </div>

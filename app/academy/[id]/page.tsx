@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import DuoIcon from '@/components/ui/duo-icon'
 
 function Icon({ name, className = 'w-4 h-4 text-pink-600' }: { name: string; className?: string }){
   switch (name) {
@@ -62,7 +63,7 @@ export default function CourseDetail({ params }: { params: { id: string } }){
       const supabase = createClient()
       const { data } = await supabase
         .from('courses')
-        .select('id,title,level,duration_weeks,students,seats,seats_available,price,mode,image_url,description,start_date,schedule_text,teacher,certificate_included,program_md,requirements_md,includes_md, course_categories(name)')
+        .select('id,title,level,duration_weeks,students,seats,seats_available,price,mode,image_url,description,start_date,schedule_text,teacher,certificate_included,program_md,requirements_md,includes_md,program_json,requirements_json,includes_json, course_categories(name)')
         .eq('id', id)
         .maybeSingle()
       if (!data) { setC(null); setLoading(false); return }
@@ -88,6 +89,9 @@ export default function CourseDetail({ params }: { params: { id: string } }){
         program_md: data.program_md,
         requirements_md: data.requirements_md,
         includes_md: data.includes_md,
+        program_json: data.program_json,
+        requirements_json: data.requirements_json,
+        includes_json: data.includes_json,
         category_name: catName || undefined,
       })
       setLoading(false)
@@ -145,31 +149,67 @@ export default function CourseDetail({ params }: { params: { id: string } }){
 
           {c.description && (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="book" /> <span>Sobre el curso</span></div>
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="book" /> <span>Sobre el curso</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.description}</div>
             </div>
           )}
 
-          {c.program_md && (
+          {(Array.isArray(c.program_json) && c.program_json.length > 0) ? (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="list" /> <span>Programa del curso</span></div>
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="list" /> <span>Programa del curso</span></div>
+              <div className="space-y-4">
+                {c.program_json.map((m: any, i: number) => (
+                  <div key={i} className="space-y-2">
+                    {m.title && <div className="font-medium flex items-center gap-2 text-pink-700"><DuoIcon name="book" className="w-4 h-4" /> {m.title}</div>}
+                    {Array.isArray(m.items) && m.items.length > 0 && (
+                      <ul className="space-y-1 text-sm">
+                        {m.items.map((it: string, ii: number) => (
+                          <li key={ii} className="flex items-start gap-2"><DuoIcon name="check" className="w-4 h-4" /> <span>{it}</span></li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (c.program_md && (
+            <div className="rounded-xl border bg-white p-5">
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="list" /> <span>Programa del curso</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.program_md}</div>
             </div>
-          )}
+          ))}
 
-          {c.requirements_md && (
+          {(Array.isArray(c.requirements_json) && c.requirements_json.length > 0) ? (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="check" /> <span>Requisitos</span></div>
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="check" /> <span>Requisitos</span></div>
+              <ul className="space-y-1 text-sm">
+                {c.requirements_json.map((it: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2"><DuoIcon name="check" className="w-4 h-4" /> <span>{it}</span></li>
+                ))}
+              </ul>
+            </div>
+          ) : (c.requirements_md && (
+            <div className="rounded-xl border bg-white p-5">
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="check" /> <span>Requisitos</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.requirements_md}</div>
             </div>
-          )}
+          ))}
 
-          {c.includes_md && (
+          {(Array.isArray(c.includes_json) && c.includes_json.length > 0) ? (
             <div className="rounded-xl border bg-white p-5">
-              <div className="font-medium mb-2 flex items-center gap-2"><Icon name="gift" /> <span>Qué incluye el curso</span></div>
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="gift" /> <span>Qué incluye el curso</span></div>
+              <ul className="space-y-1 text-sm">
+                {c.includes_json.map((it: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2"><DuoIcon name="check" className="w-4 h-4" /> <span>{it}</span></li>
+                ))}
+              </ul>
+            </div>
+          ) : (c.includes_md && (
+            <div className="rounded-xl border bg-white p-5">
+              <div className="font-medium mb-2 flex items-center gap-2"><DuoIcon name="gift" /> <span>Qué incluye el curso</span></div>
               <div className="text-gray-700 text-sm whitespace-pre-line">{c.includes_md}</div>
             </div>
-          )}
+          ))}
         </div>
 
         <aside className="lg:col-span-1">
@@ -182,19 +222,19 @@ export default function CourseDetail({ params }: { params: { id: string } }){
               <div className="h-px bg-gray-200" />
               <div className="space-y-3 text-sm text-gray-700">
                 {c.start_date && (
-                  <div className="flex items-start gap-2"><Icon name="calendar" /><div><div className="text-gray-500 text-xs">Inicio</div><div>{formatDate(c.start_date)}</div></div></div>
+                  <div className="flex items-start gap-2"><DuoIcon name="calendar" /><div><div className="text-gray-500 text-xs">Inicio</div><div>{formatDate(c.start_date)}</div></div></div>
                 )}
                 {c.schedule_text && (
-                  <div className="flex items-start gap-2"><Icon name="clock" /><div><div className="text-gray-500 text-xs">Horarios</div><div>{c.schedule_text}</div></div></div>
+                  <div className="flex items-start gap-2"><DuoIcon name="clock" /><div><div className="text-gray-500 text-xs">Horarios</div><div>{c.schedule_text}</div></div></div>
                 )}
                 {c.duration_weeks!=null && (
-                  <div className="flex items-start gap-2"><Icon name="hourglass" /><div><div className="text-gray-500 text-xs">Duración</div><div>{c.duration_weeks} semanas</div></div></div>
+                  <div className="flex items-start gap-2"><DuoIcon name="hourglass" /><div><div className="text-gray-500 text-xs">Duración</div><div>{c.duration_weeks} semanas</div></div></div>
                 )}
                 {(c.seats!=null || c.seats_available!=null) && (
-                  <div className="flex items-start gap-2"><Icon name="users" /><div><div className="text-gray-500 text-xs">Cupos disponibles</div><div>{c.seats_available!=null ? c.seats_available : '-'}{c.seats!=null ? ` de ${c.seats} lugares` : ''}</div></div></div>
+                  <div className="flex items-start gap-2"><DuoIcon name="users" /><div><div className="text-gray-500 text-xs">Cupos disponibles</div><div>{c.seats_available!=null ? c.seats_available : '-'}{c.seats!=null ? ` de ${c.seats} lugares` : ''}</div></div></div>
                 )}
                 {c.teacher && (
-                  <div className="flex items-start gap-2"><Icon name="teacher" /><div><div className="text-gray-500 text-xs">Profesor</div><div>{c.teacher}</div></div></div>
+                  <div className="flex items-start gap-2"><DuoIcon name="teacher" /><div><div className="text-gray-500 text-xs">Profesor</div><div>{c.teacher}</div></div></div>
                 )}
               </div>
 
@@ -205,7 +245,7 @@ export default function CourseDetail({ params }: { params: { id: string } }){
 
               {c.certificate_included && (
                 <div className="rounded-lg bg-gradient-to-r from-pink-50 to-white border border-pink-100 p-3 text-sm text-pink-800 flex items-start gap-2">
-                  <Icon name="certificate" className="w-5 h-5 text-pink-600" />
+                  <DuoIcon name="certificate" className="w-5 h-5" />
                   <div>
                     <div className="font-medium">Certificado incluido</div>
                     <div className="text-pink-700/90">Recibirás un certificado oficial avalado al completar el curso</div>

@@ -68,6 +68,13 @@ export default async function AdminAcademyPage({ searchParams }: { searchParams?
       requirements_md: String(fd.get('requirements_md') || ''),
       includes_md: String(fd.get('includes_md') || ''),
     }
+    // Structured JSON fields (optional)
+    const pj = String(fd.get('program_json') || '').trim()
+    const rj = String(fd.get('requirements_json') || '').trim()
+    const ij = String(fd.get('includes_json') || '').trim()
+    try { base.program_json = pj ? JSON.parse(pj) : null } catch {}
+    try { base.requirements_json = rj ? JSON.parse(rj) : null } catch {}
+    try { base.includes_json = ij ? JSON.parse(ij) : null } catch {}
     const file = fd.get('image_file') as File | null
     if (file && typeof file === 'object' && 'arrayBuffer' in file && (file as File).size > 0) {
       const ab = await (file as File).arrayBuffer()

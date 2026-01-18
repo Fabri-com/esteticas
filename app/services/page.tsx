@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import DuoIcon from '@/components/ui/duo-icon'
 
 type PageProps = { searchParams?: { cat?: string } }
 
@@ -62,7 +63,9 @@ export default async function ServicesPage({ searchParams }: PageProps) {
               {(() => {
                 const catName = categories?.find(c => c.id === s.category_id)?.name || s.category
                 return catName ? (
-                  <span className="absolute top-3 right-3 text-xs bg-white/90 border rounded-full px-2 py-0.5">{catName}</span>
+                  <span className="absolute top-3 right-3 text-xs bg-white/90 border rounded-full px-2 py-0.5 inline-flex items-center gap-1">
+                    <DuoIcon name="list" className="w-3.5 h-3.5" /> {catName}
+                  </span>
                 ) : null
               })()}
             </div>
@@ -73,8 +76,11 @@ export default async function ServicesPage({ searchParams }: PageProps) {
                   <p className="text-sm text-gray-600 line-clamp-2">{s.description}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="font-semibold">{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}</div>
-                  <div className="text-xs text-gray-500">{s.duration_minutes} min</div>
+                  <div className="font-semibold inline-flex items-center gap-1">
+                    <DuoIcon name="money" className="w-4 h-4" />
+                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}
+                  </div>
+                  <div className="text-xs text-gray-500 inline-flex items-center gap-1"><DuoIcon name="timer" className="w-3.5 h-3.5" /> {s.duration_minutes} min</div>
                 </div>
               </div>
               <div className="flex gap-2 pt-2">

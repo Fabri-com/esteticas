@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import DuoIcon from '@/components/ui/duo-icon'
 
 export default function ProductoDetalle({ params }: { params: { id: string } }){
   const { id } = params
@@ -77,9 +78,13 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
           })()}
         </div>
         <div className="space-y-3">
-          {p.category_name && <div className="text-xs text-gray-500">{p.category_name}</div>}
+          {p.category_name && (
+            <div className="text-xs text-gray-600 inline-flex items-center gap-1">
+              <DuoIcon name="list" className="w-3.5 h-3.5" /> {p.category_name}
+            </div>
+          )}
           <h1 className="text-2xl font-semibold">{p.name}</h1>
-          <div className="text-pink-600 font-semibold">{formatPrice(p.price)}</div>
+          <div className="text-pink-600 font-semibold inline-flex items-center gap-1"><DuoIcon name="money" className="w-4 h-4" /> {formatPrice(p.price)}</div>
           {p.description && (
             <div className="prose prose-sm max-w-none"><p>{p.description}</p></div>
           )}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import DuoIcon from '@/components/ui/duo-icon'
 
 type Product = {
   id: string
@@ -113,12 +114,14 @@ export default function ProductosPage() {
                   <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Sin imagen</div>
                 )}
                 {p.category_name && (
-                  <span className="absolute top-2 right-2 text-xs px-2 py-1 rounded-full bg-white/90 border text-gray-700">{p.category_name}</span>
+                  <span className="absolute top-2 right-2 text-xs px-2 py-1 rounded-full bg-white/90 border text-gray-700 inline-flex items-center gap-1">
+                    <DuoIcon name="list" className="w-3.5 h-3.5" /> {p.category_name}
+                  </span>
                 )}
               </div>
               <div className="p-4 space-y-2">
                 <div className="font-medium">{p.name}</div>
-                <div className="text-pink-600 font-semibold">{formatPrice(p.price)}</div>
+                <div className="text-pink-600 font-semibold inline-flex items-center gap-1"><DuoIcon name="money" className="w-4 h-4" />{formatPrice(p.price)}</div>
                 <div className="flex gap-2 pt-2">
                   <Link href={`/productos/${p.id}`} className="px-3 py-1 rounded border text-sm">Ver detalle</Link>
                   <button onClick={()=>handleConsultar(p)} className="px-3 py-1 rounded bg-pink-500 text-white text-sm">Consultar</button>
