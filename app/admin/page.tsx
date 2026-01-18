@@ -37,6 +37,8 @@ export default async function AdminDashboard() {
         <h1 className="text-2xl font-semibold">Agenda de hoy</h1>
         <div className="flex gap-2">
           <Link href="/admin/services" className="btn">Servicios</Link>
+          <Link href="/admin/productos" className="btn">Productos</Link>
+          <Link href="/admin/academy" className="btn">Academia</Link>
           <form action={cleanupPending}><button className="btn bg-gray-900 hover:bg-black">Limpiar pendientes</button></form>
         </div>
       </div>

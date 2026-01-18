@@ -122,16 +122,29 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
     }
     const serviceId = saved?.id || idRaw
 
-    // Time windows handling
-    const weekdays = formData.getAll('tw_weekday') as string[]
-    const starts = formData.getAll('tw_start') as string[]
-    const ends = formData.getAll('tw_end') as string[]
-    const rows: { weekday: number, start_time: string, end_time: string }[] = []
-    for (let i = 0; i < Math.min(weekdays.length, starts.length, ends.length); i++) {
-      const wd = parseInt(String(weekdays[i] || ''), 10)
-      const st = String(starts[i] || '')
-      const et = String(ends[i] || '')
-      if (Number.isFinite(wd) && st && et) rows.push({ weekday: wd, start_time: st, end_time: et })
+    // Time windows handling (prefer hidden JSON if present)
+    let rows: { weekday: number, start_time: string, end_time: string }[] = []
+    const twJson = String(formData.get('tw_json') || '').trim()
+    if (twJson) {
+      try {
+        const parsed = JSON.parse(twJson)
+        if (Array.isArray(parsed)) {
+          rows = parsed
+            .map((r: any) => ({ weekday: Number(r?.weekday), start_time: String(r?.start_time||''), end_time: String(r?.end_time||'') }))
+            .filter(r => Number.isFinite(r.weekday) && r.start_time && r.end_time)
+        }
+      } catch {}
+    }
+    if (!rows.length) {
+      const weekdays = formData.getAll('tw_weekday') as string[]
+      const starts = formData.getAll('tw_start') as string[]
+      const ends = formData.getAll('tw_end') as string[]
+      for (let i = 0; i < Math.min(weekdays.length, starts.length, ends.length); i++) {
+        const wd = parseInt(String(weekdays[i] || ''), 10)
+        const st = String(starts[i] || '')
+        const et = String(ends[i] || '')
+        if (Number.isFinite(wd) && st && et) rows.push({ weekday: wd, start_time: st, end_time: et })
+      }
     }
     if (rows.length) {
       const delRes = await supabase.from('service_time_windows').delete().eq('service_id', serviceId)

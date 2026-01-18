@@ -50,6 +50,7 @@ export default function Header(){
         {/* Right actions */}
         <div className="hidden md:flex items-center gap-3">
           <Link href="/booking" className="px-3 py-1 rounded bg-pink-500 text-white hover:bg-pink-600 transition-colors text-sm">Reservar turno</Link>
+          {loggedIn && <Link href="/admin" className="text-gray-600 text-sm hover:underline">Dashboard</Link>}
           {loggedIn ? (
             <button onClick={async()=>{ const supabase = createClient(); await supabase.auth.signOut(); setLoggedIn(false) }} className="text-gray-500 text-sm">Cerrar sesión</button>
           ) : (
@@ -72,6 +73,7 @@ export default function Header(){
             <Link href="/" className="py-2" onClick={()=>setOpen(false)}>Inicio</Link>
             <Link href="/academy" className="py-2" onClick={()=>setOpen(false)}>Academia</Link>
             <Link href="/contacto" className="py-2" onClick={()=>setOpen(false)}>Contacto</Link>
+            {loggedIn && <Link href="/admin" className="py-2" onClick={()=>setOpen(false)}>Dashboard</Link>}
             {loggedIn ? (
               <button className="py-2 text-left" onClick={async()=>{ const supabase = createClient(); await supabase.auth.signOut(); setLoggedIn(false); setOpen(false) }}>Cerrar sesión</button>
             ) : (
