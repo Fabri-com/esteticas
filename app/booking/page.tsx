@@ -230,31 +230,7 @@ export default function BookingPage(){
           
           {errors.start_at && <p className="text-sm text-red-600">{errors.start_at}</p>}
         </div>
-        {!!form.service_id && (
-          <div>
-            <label className="block text-sm mb-1">Hoy y Mañana</label>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <div className="text-gray-600 mb-1">Hoy</div>
-                <div className="flex flex-wrap gap-2">
-                  {slotsToday.map(t => (
-                    <button key={t} type="button" className={`px-3 py-1 rounded-full border ${date && form.start_at.endsWith('T'+t) ? 'bg-pink-500 text-white border-pink-500' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'}`} onClick={()=>{ const d=new Date().toISOString().slice(0,10); setDate(d); setForm(f=>({...f,start_at:`${d}T${t}`})) }}>{t}</button>
-                  ))}
-                  {slotsToday.length===0 && <div className="text-gray-400">Sin turnos</div>}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-600 mb-1">Mañana</div>
-                <div className="flex flex-wrap gap-2">
-                  {slotsTomorrow.map(t => (
-                    <button key={t} type="button" className={`px-3 py-1 rounded-full border ${date && form.start_at.endsWith('T'+t) ? 'bg-pink-500 text-white border-pink-500' : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100'}`} onClick={()=>{ const tm=new Date(); tm.setDate(tm.getDate()+1); const d=tm.toISOString().slice(0,10); setDate(d); setForm(f=>({...f,start_at:`${d}T${t}`})) }}>{t}</button>
-                  ))}
-                  {slotsTomorrow.length===0 && <div className="text-gray-400">Sin turnos</div>}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm mb-1">Nombre y Apellido</label>
