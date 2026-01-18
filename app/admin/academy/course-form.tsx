@@ -85,6 +85,10 @@ export default function CourseForm({
             <input name="seats" type="number" min={0} defaultValue={initial?.seats ?? ''} className="w-full border rounded px-3 py-2" />
           </div>
           <div className="space-y-2">
+            <label className="text-sm">Cupos disponibles</label>
+            <input name="seats_available" type="number" min={0} defaultValue={initial?.seats_available ?? ''} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div className="space-y-2">
             <label className="text-sm">Precio (ARS)</label>
             <input name="price" type="number" min={0} step="1" defaultValue={initial?.price ?? ''} className="w-full border rounded px-3 py-2" />
           </div>
@@ -92,11 +96,42 @@ export default function CourseForm({
             <label className="text-sm">Modalidad</label>
             <input name="mode" defaultValue={initial?.mode || ''} className="w-full border rounded px-3 py-2" />
           </div>
+          <div className="space-y-2">
+            <label className="text-sm">Inicio (fecha)</label>
+            <input name="start_date" type="date" defaultValue={initial?.start_date || ''} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm">Horarios (texto)</label>
+            <input name="schedule_text" defaultValue={initial?.schedule_text || ''} placeholder="Martes y Jueves, 18:00 - 21:00 hs" className="w-full border rounded px-3 py-2" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm">Profesor/a</label>
+            <input name="teacher" defaultValue={initial?.teacher || ''} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div className="flex items-center gap-2">
+            <input id="certificate_included" name="certificate_included" type="checkbox" defaultChecked={!!initial?.certificate_included} />
+            <label htmlFor="certificate_included" className="text-sm">Certificado incluido</label>
+          </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm">Descripción</label>
           <textarea name="description" defaultValue={initial?.description || ''} rows={4} className="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="space-y-2 md:col-span-1">
+            <label className="text-sm">Programa (Markdown)</label>
+            <textarea name="program_md" defaultValue={initial?.program_md || ''} rows={8} className="w-full border rounded px-3 py-2" placeholder="" />
+          </div>
+          <div className="space-y-2 md:col-span-1">
+            <label className="text-sm">Requisitos (Markdown)</label>
+            <textarea name="requirements_md" defaultValue={initial?.requirements_md || ''} rows={8} className="w-full border rounded px-3 py-2" />
+          </div>
+          <div className="space-y-2 md:col-span-1">
+            <label className="text-sm">Incluye (Markdown)</label>
+            <textarea name="includes_md" defaultValue={initial?.includes_md || ''} rows={8} className="w-full border rounded px-3 py-2" />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4 items-start">

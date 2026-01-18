@@ -56,9 +56,17 @@ export default async function AdminAcademyPage({ searchParams }: { searchParams?
       duration_weeks: fd.get('duration_weeks') ? Number(fd.get('duration_weeks')) : null,
       students: fd.get('students') ? Number(fd.get('students')) : null,
       seats: fd.get('seats') ? Number(fd.get('seats')) : null,
+      seats_available: fd.get('seats_available') ? Number(fd.get('seats_available')) : null,
       price: fd.get('price') ? Number(fd.get('price')) : null,
       mode: String(fd.get('mode') || ''),
       description: String(fd.get('description') || ''),
+      start_date: fd.get('start_date') ? String(fd.get('start_date')) : null,
+      schedule_text: String(fd.get('schedule_text') || ''),
+      teacher: String(fd.get('teacher') || ''),
+      certificate_included: fd.get('certificate_included') === 'on',
+      program_md: String(fd.get('program_md') || ''),
+      requirements_md: String(fd.get('requirements_md') || ''),
+      includes_md: String(fd.get('includes_md') || ''),
     }
     const file = fd.get('image_file') as File | null
     if (file && typeof file === 'object' && 'arrayBuffer' in file && (file as File).size > 0) {

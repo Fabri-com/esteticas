@@ -205,7 +205,15 @@ export default function ServiceForm({ categories, action, initial, createCategor
             <div className="space-y-2">
               {tw.map((row, idx) => (
                 <div key={idx} className={`grid grid-cols-12 gap-2 items-end ${overlapIdx.has(idx) ? 'bg-red-50 border border-red-300 rounded p-2' : ''}`}>
-                  <select name="tw_weekday" defaultValue={row.weekday} className="col-span-4 border rounded px-3 py-2">
+                  <select
+                    name="tw_weekday"
+                    defaultValue={row.weekday}
+                    onChange={(e)=>{
+                      const val = parseInt(e.target.value, 10)
+                      setTw(prev => prev.map((r,i)=> i===idx ? { ...r, weekday: val } : r))
+                    }}
+                    className="col-span-4 border rounded px-3 py-2"
+                  >
                     <option value={0}>Domingo</option>
                     <option value={1}>Lunes</option>
                     <option value={2}>Martes</option>
@@ -214,8 +222,20 @@ export default function ServiceForm({ categories, action, initial, createCategor
                     <option value={5}>Viernes</option>
                     <option value={6}>Sábado</option>
                   </select>
-                  <input name="tw_start" type="time" defaultValue={row.start_time} className="col-span-3 border rounded px-3 py-2" />
-                  <input name="tw_end" type="time" defaultValue={row.end_time} className="col-span-3 border rounded px-3 py-2" />
+                  <input
+                    name="tw_start"
+                    type="time"
+                    defaultValue={row.start_time}
+                    onChange={(e)=> setTw(prev => prev.map((r,i)=> i===idx ? { ...r, start_time: e.target.value } : r))}
+                    className="col-span-3 border rounded px-3 py-2"
+                  />
+                  <input
+                    name="tw_end"
+                    type="time"
+                    defaultValue={row.end_time}
+                    onChange={(e)=> setTw(prev => prev.map((r,i)=> i===idx ? { ...r, end_time: e.target.value } : r))}
+                    className="col-span-3 border rounded px-3 py-2"
+                  />
                   <button type="button" className="col-span-2 rounded-md border px-3 py-2 text-sm bg-red-500 text-white hover:bg-red-600" onClick={() => setTw(tw.filter((_,i)=>i!==idx))}>Eliminar</button>
                   {overlapIdx.has(idx) && (
                     <div className="col-span-12 text-xs text-red-700 mt-1">Esta franja se solapa con otra del mismo día</div>
@@ -228,7 +248,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
             <button
               type="button"
               className="rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600"
-              onClick={() => setTw([...tw, { weekday: 1, start_time: '09:00', end_time: '13:00' }])}
+              onClick={() => setTw([...tw, { weekday: 0, start_time: '13:00', end_time: '22:00' }])}
             >Agregar franja</button>
             <button
               type="button"
