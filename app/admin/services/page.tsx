@@ -12,10 +12,15 @@ async function requireAdmin() {
   return supabase
 }
 
-export default async function AdminServicesPage(){
+export default async function AdminServicesPage({ searchParams }: { searchParams?: { edit?: string } }){
   const supabase = await requireAdmin()
   const { data: services } = await supabase.from('services').select('*').order('name')
   const { data: categories } = await supabase.from('service_categories').select('*').order('name')
+  let initialService: any = null
+  if (searchParams?.edit) {
+    const { data } = await supabase.from('services').select('*').eq('id', searchParams.edit).single()
+    initialService = data || null
+  }
 
   async function upsertService(_: any, formData: FormData) {
     'use server'
@@ -46,12 +51,14 @@ export default async function AdminServicesPage(){
       const ab = await (file as File).arrayBuffer()
       const ext = (file as File).type?.split('/')?.[1] || 'jpg'
       const path = `${randomUUID()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('service-images').upload(path, Buffer.from(ab), {
+      const bucket = supabase.storage.from('service-images')
+      const { error: upErr } = await bucket.upload(path, Buffer.from(ab), {
         contentType: (file as File).type || 'image/jpeg',
         upsert: true,
       })
       if (!upErr) {
-        base.image_url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/service-images/${path}`
+        const pub = bucket.getPublicUrl(path)
+        base.image_url = pub.data.publicUrl
       }
     }
 
@@ -63,12 +70,14 @@ export default async function AdminServicesPage(){
         const ab = await (gf as File).arrayBuffer()
         const ext = (gf as File).type?.split('/')?.[1] || 'jpg'
         const path = `${randomUUID()}.${ext}`
-        const { error: gErr } = await supabase.storage.from('service-images').upload(path, Buffer.from(ab), {
+        const bucket = supabase.storage.from('service-images')
+        const { error: gErr } = await bucket.upload(path, Buffer.from(ab), {
           contentType: (gf as File).type || 'image/jpeg',
           upsert: true,
         })
         if (!gErr) {
-          base.gallery_urls.push(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/service-images/${path}`)
+          const pub = bucket.getPublicUrl(path)
+          base.gallery_urls.push(pub.data.publicUrl)
         }
       }
     }
@@ -98,7 +107,7 @@ export default async function AdminServicesPage(){
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Servicios</h1>
-      <ServiceForm categories={categories || []} action={upsertService} />
+      <ServiceForm categories={categories || []} action={upsertService} initial={initialService} />
 
       <div className="space-y-3">
         {services?.map(s => {
@@ -111,6 +120,7 @@ export default async function AdminServicesPage(){
               <div>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}</div>
               <div className="text-sm text-gray-600 md:col-span-3">{s.description}</div>
               <div className="flex items-center gap-2 justify-end">
+                <a href={`/admin/services?edit=${s.id}`} className="rounded-md border px-3 py-1.5 text-sm">Editar</a>
                 <form action={deleteService}>
                   <input type="hidden" name="id" value={s.id} />
                   <button className="btn bg-gray-900 hover:bg-black">Eliminar</button>

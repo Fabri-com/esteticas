@@ -7,9 +7,10 @@ type Category = { id: string; name: string }
 type Props = {
   categories: Category[]
   action: (prevState: any, formData: FormData) => Promise<{ success?: boolean; error?: string } | undefined>
+  initial?: any | null
 }
 
-export default function ServiceForm({ categories, action }: Props){
+export default function ServiceForm({ categories, action, initial }: Props){
   const [state, formAction] = useFormState(action, null as any)
 
   return (
@@ -22,35 +23,36 @@ export default function ServiceForm({ categories, action }: Props){
       )}
 
       <section className="grid md:grid-cols-2 gap-4">
+        {initial?.id && <input type="hidden" name="id" value={initial.id} />}
         <div className="space-y-2">
           <h3 className="font-medium">Básicos</h3>
-          <input name="name" placeholder="Nombre" className="w-full border rounded px-3 py-2" required />
+          <input name="name" placeholder="Nombre" className="w-full border rounded px-3 py-2" required defaultValue={initial?.name || ''} />
           <div className="grid grid-cols-2 gap-2">
-            <select name="category_id" className="border rounded px-3 py-2">
+            <select name="category_id" className="border rounded px-3 py-2" defaultValue={initial?.category_id || ''}>
               <option value="">Sin categoría</option>
               {categories?.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
-            <input name="category" placeholder="Etiqueta opcional" className="border rounded px-3 py-2" />
+            <input name="category" placeholder="Etiqueta opcional" className="border rounded px-3 py-2" defaultValue={initial?.category || ''} />
           </div>
-          <label className="inline-flex items-center gap-2 text-sm"><input name="is_active" type="checkbox" defaultChecked /> Activo</label>
+          <label className="inline-flex items-center gap-2 text-sm"><input name="is_active" type="checkbox" defaultChecked={initial?.is_active ?? true} /> Activo</label>
         </div>
         <div className="space-y-2">
           <h3 className="font-medium">Duración y Precio</h3>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Duración</label>
-              <input name="duration_hhmm" type="time" step="60" className="w-full border rounded px-3 py-2" />
+              <input name="duration_hhmm" type="time" step="60" className="w-full border rounded px-3 py-2" defaultValue={initial?.duration_minutes ? `${String(Math.floor(initial.duration_minutes/60)).padStart(2,'0')}:${String(initial.duration_minutes%60).padStart(2,'0')}` : ''} />
             </div>
             <div>
               <label className="block text-xs text-gray-600 mb-1">Precio</label>
-              <input name="price" type="number" min="0" step="100" className="w-full border rounded px-3 py-2" required />
+              <input name="price" type="number" min="0" step="100" className="w-full border rounded px-3 py-2" required defaultValue={initial?.price ?? ''} />
             </div>
           </div>
           <div>
             <label className="block text-xs text-gray-600 mb-1">Descripción</label>
-            <textarea name="description" className="w-full border rounded px-3 py-2 min-h-[72px]" placeholder="Descripción breve del servicio" />
+            <textarea name="description" className="w-full border rounded px-3 py-2 min-h-[72px]" placeholder="Descripción breve del servicio" defaultValue={initial?.description || ''} />
           </div>
         </div>
       </section>
@@ -58,7 +60,7 @@ export default function ServiceForm({ categories, action }: Props){
       <section className="grid md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <h3 className="font-medium">Imágenes</h3>
-          <input name="image_url" placeholder="URL imagen principal (opcional)" className="w-full border rounded px-3 py-2" />
+          <input name="image_url" placeholder="URL imagen principal (opcional)" className="w-full border rounded px-3 py-2" defaultValue={initial?.image_url || ''} />
           <input name="image_file" type="file" accept="image/*" className="w-full border rounded px-3 py-2" />
           <div>
             <label className="block text-xs text-gray-600 mb-1">Galería (múltiples imágenes)</label>
@@ -67,7 +69,7 @@ export default function ServiceForm({ categories, action }: Props){
         </div>
         <div className="space-y-2">
           <h3 className="font-medium">Lo que incluye</h3>
-          <textarea name="includes" className="w-full border rounded px-3 py-2 min-h-[120px]" placeholder={'Ej.:\n• Limado y forma de uñas\n• Tratamiento de cutículas'} />
+          <textarea name="includes" className="w-full border rounded px-3 py-2 min-h-[120px]" placeholder={'Ej.:\n• Limado y forma de uñas\n• Tratamiento de cutículas'} defaultValue={(initial?.includes || [])?.join('\n')} />
           <p className="text-xs text-gray-500">Ingresá una línea por cada punto. Se mostrará como una lista en la ficha.</p>
         </div>
       </section>
