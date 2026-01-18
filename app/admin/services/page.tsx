@@ -22,15 +22,20 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
     const { data } = await supabase.from('services').select('*').eq('id', searchParams.edit).single()
     initialService = data || null
     if (initialService?.id) {
-      const { data: win } = await supabase.from('service_time_windows').select('id,weekday,start_time,end_time').eq('service_id', initialService.id).order('weekday').order('start_time')
-      initialWindows = win || []
+      const { data: win, error: winErr } = await supabase
+        .from('service_time_windows')
+        .select('id,weekday,start_time,end_time')
+        .eq('service_id', initialService.id)
+        .order('weekday')
+        .order('start_time')
+      if (!winErr) initialWindows = win || []
     }
   }
 
   async function createCategory(_: any, formData: FormData) {
     'use server'
     const supabase = createClient()
-    const name = String(formData.get('name') || '').trim()
+    const name = String(formData.get('new_category_name') || '').trim()
     if (!name) return { error: 'Ingresá un nombre' }
     const { error } = await supabase.from('service_categories').insert({ name })
     if (error) return { error: error.message }
@@ -129,10 +134,15 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
       if (Number.isFinite(wd) && st && et) rows.push({ weekday: wd, start_time: st, end_time: et })
     }
     if (rows.length) {
-      await supabase.from('service_time_windows').delete().eq('service_id', serviceId)
-      const insertRows = rows.map(r => ({ service_id: serviceId, ...r }))
-      const { error: insErr } = await supabase.from('service_time_windows').insert(insertRows)
-      if (insErr) return { error: `No se pudieron guardar las franjas: ${insErr.message}` }
+      const delRes = await supabase.from('service_time_windows').delete().eq('service_id', serviceId)
+      // If table doesn't exist yet, skip schedule writes
+      if (delRes.error && (delRes.error as any)?.code === '42P01') {
+        // ignore relation does not exist
+      } else {
+        const insertRows = rows.map(r => ({ service_id: serviceId, ...r }))
+        const { error: insErr } = await supabase.from('service_time_windows').insert(insertRows)
+        if (insErr && (insErr as any)?.code !== '42P01') return { error: `No se pudieron guardar las franjas: ${insErr.message}` }
+      }
     } else if (!hasId) {
       // Defaults on create if none provided
       const defaults = [
@@ -148,7 +158,8 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
         { weekday: 5, start_time: '16:00', end_time: '22:00' },
         { weekday: 6, start_time: '09:00', end_time: '13:00' },
       ]
-      await supabase.from('service_time_windows').insert(defaults.map(r => ({ service_id: serviceId, ...r })))
+      const { error: defErr } = await supabase.from('service_time_windows').insert(defaults.map(r => ({ service_id: serviceId, ...r })))
+      if (defErr && (defErr as any)?.code !== '42P01') return { error: `No se pudieron guardar las franjas por defecto: ${defErr.message}` }
     }
     revalidatePath('/admin/services')
     return { success: true }

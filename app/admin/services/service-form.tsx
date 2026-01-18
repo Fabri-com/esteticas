@@ -52,7 +52,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
             </select>
             <div className="space-y-1">
               <form action={catAction} className="flex gap-2">
-                <input name="name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
+                <input name="new_category_name" placeholder="Nueva categoría" className="border rounded px-3 py-2 w-full" />
                 <button type="submit" className="rounded-md border px-3 py-2 text-sm">Agregar</button>
               </form>
               {catState?.error && <div className="text-xs text-red-600">{catState.error}</div>}
