@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { redirect, revalidatePath } from 'next/navigation'
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { randomUUID } from 'crypto'
 import ProductForm from './product-form'
 
