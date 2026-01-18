@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+import { randomUUID } from 'crypto'
+import CourseForm from './course-form'
 
 async function requireAdmin() {
   const supabase = createClient()
@@ -14,8 +17,66 @@ export default async function AdminAcademyPage(){
   const supabase = await requireAdmin()
   const { data: courses } = await supabase
     .from('courses')
-    .select('id,title,level,price,mode,course_categories(name),image_url')
+    .select('id,title,level,price,mode,course_categories(name),image_url,category_id')
     .order('title')
+  const { data: categories } = await supabase
+    .from('course_categories')
+    .select('id,name')
+    .order('name')
+
+  async function createCategory(_: any, fd: FormData) {
+    'use server'
+    const supabase = createClient()
+    const name = String(fd.get('new_category_name') || '').trim()
+    if (!name) return { error: 'Ingresá un nombre' }
+    const { error } = await supabase.from('course_categories').insert({ name })
+    if (error) return { error: error.message }
+    revalidatePath('/admin/academy')
+    return { success: true }
+  }
+
+  async function upsertCourse(_: any, fd: FormData) {
+    'use server'
+    const supabase = createClient()
+    const idRaw = String(fd.get('id') || '')
+    const base: any = {
+      title: String(fd.get('title') || ''),
+      category_id: (fd.get('category_id') || '').toString().trim() || null,
+      level: String(fd.get('level') || ''),
+      duration_weeks: fd.get('duration_weeks') ? Number(fd.get('duration_weeks')) : null,
+      students: fd.get('students') ? Number(fd.get('students')) : null,
+      seats: fd.get('seats') ? Number(fd.get('seats')) : null,
+      price: fd.get('price') ? Number(fd.get('price')) : null,
+      mode: String(fd.get('mode') || ''),
+      description: String(fd.get('description') || ''),
+    }
+    const file = fd.get('image_file') as File | null
+    if (file && typeof file === 'object' && 'arrayBuffer' in file && (file as File).size > 0) {
+      const ab = await (file as File).arrayBuffer()
+      const ext = (file as File).type?.split('/')?.[1] || 'jpg'
+      const path = `${randomUUID()}.${ext}`
+      const bucket = supabase.storage.from('course-images')
+      const { error: upErr } = await bucket.upload(path, Buffer.from(ab), { contentType: (file as File).type || 'image/jpeg', upsert: true })
+      if (upErr) return { error: `No se pudo subir la imagen: ${upErr.message}` }
+      const pub = bucket.getPublicUrl(path)
+      base.image_url = pub.data.publicUrl
+    }
+    const payload = idRaw ? { id: idRaw, ...base } : base
+    const { error } = await supabase.from('courses').upsert(payload)
+    if (error) return { error: error.message }
+    revalidatePath('/admin/academy')
+    return { success: true }
+  }
+
+  async function deleteCourse(fd: FormData) {
+    'use server'
+    const supabase = createClient()
+    const id = String(fd.get('id') || '')
+    if (!id) return
+    await supabase.from('courses').delete().eq('id', id)
+    revalidatePath('/admin/academy')
+    redirect('/admin/academy')
+  }
 
   return (
     <div className="space-y-6">
@@ -25,6 +86,9 @@ export default async function AdminAcademyPage(){
           <Link href="/admin" className="btn">Volver al Dashboard</Link>
         </div>
       </div>
+
+      <CourseForm categories={categories || []} initial={null} action={upsertCourse} createCategory={createCategory} />
+
       <div className="space-y-3">
         {(courses||[]).map((c: any) => (
           <div key={c.id} className="card flex items-center justify-between">
@@ -36,8 +100,11 @@ export default async function AdminAcademyPage(){
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="rounded-md border px-3 py-1.5 text-sm" disabled>Editar</button>
-              <button className="btn bg-gray-900 hover:bg-black" disabled>Eliminar</button>
+              {/* Simple edit: reuse the form by passing id via query param in the future. For now, allow delete */}
+              <form action={deleteCourse}>
+                <input type="hidden" name="id" value={c.id} />
+                <button className="btn bg-gray-900 hover:bg-black">Eliminar</button>
+              </form>
             </div>
           </div>
         ))}
