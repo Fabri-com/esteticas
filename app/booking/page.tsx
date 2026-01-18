@@ -160,14 +160,14 @@ export default function BookingPage(){
       <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
         <div>
           <label className="block text-sm mb-1">Categoría</label>
-          <select className="w-full border rounded px-3 py-2 mb-2" value={categoryId} onChange={e=>{ setCategoryId(e.target.value); setForm(f=>({ ...f, service_id: '' })) }}>
+          <select className="w-full border rounded px-3 py-2 mb-2 relative z-10 bg-white" value={categoryId} onChange={e=>{ setCategoryId(e.target.value); setForm(f=>({ ...f, service_id: '' })) }}>
             <option value="">Seleccioná categoría…</option>
             {categories.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
           <label className="block text-sm mb-1">Servicio</label>
-          <select className="w-full border rounded px-3 py-2" value={form.service_id} onChange={e=>setForm({...form, service_id: e.target.value})} disabled={!categoryId}>
+          <select className="w-full border rounded px-3 py-2 relative z-10 bg-white" value={form.service_id} onChange={e=>setForm({...form, service_id: e.target.value})} disabled={!categoryId}>
             <option value="">{categoryId ? 'Seleccioná...' : 'Elegí primero una categoría'}</option>
             {services.filter(s => !categoryId || s.category_id === categoryId).map(s => (
               <option key={s.id} value={s.id}>{s.name} • {s.duration_minutes}m{ s.category_name ? ` • ${s.category_name}`: '' } • {formatPrice(s.price)}</option>
