@@ -22,6 +22,7 @@ export default function BookingPage(){
   const [errors, setErrors] = useState<Record<string,string>>({})
   const [date, setDate] = useState<string>('')
   const [slots, setSlots] = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/services').then(r=>r.json()).then(setServices)
@@ -46,6 +47,7 @@ export default function BookingPage(){
   // Cargar slots cuando cambia servicio o fecha
   useEffect(() => {
     const loadSlots = async () => {
+      setSlotsLoading(true)
       setSlots([])
       if (!form.service_id || !date) return
       const supabase = createClient()
@@ -80,6 +82,7 @@ export default function BookingPage(){
         }
       }
       setSlots(produced)
+      setSlotsLoading(false)
     }
     loadSlots()
   }, [form.service_id, date])
@@ -105,7 +108,7 @@ export default function BookingPage(){
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Reservar</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
         <div>
           <label className="block text-sm mb-1">Servicio</label>
           <select className="w-full border rounded px-3 py-2" value={form.service_id} onChange={e=>setForm({...form, service_id: e.target.value})}>
@@ -115,11 +118,37 @@ export default function BookingPage(){
             ))}
           </select>
           {errors.service_id && <p className="text-sm text-red-600">{errors.service_id}</p>}
+          {!!form.service_id && (
+            <div className="mt-2 rounded border border-pink-200 bg-pink-50 text-pink-800 px-3 py-2 text-sm">
+              {services.find(s=>s.id===form.service_id)?.name} · {services.find(s=>s.id===form.service_id)?.duration_minutes} minutos
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm mb-1">Fecha</label>
-          <input type="date" className="w-full border rounded px-3 py-2" value={date} onChange={e=>setDate(e.target.value)} />
-          {!!slots.length && (
+          <div className="flex gap-2">
+            <input type="date" className="w-full border rounded px-3 py-2" value={date} onChange={e=>setDate(e.target.value)} />
+            <div className="flex gap-2">
+              <button type="button" className="px-3 py-2 border rounded text-sm" onClick={() => {
+                if (!date) return
+                const d = new Date(date)
+                d.setDate(d.getDate() - 1)
+                const iso = d.toISOString().slice(0,10)
+                setDate(iso)
+              }}>◀</button>
+              <button type="button" className="px-3 py-2 border rounded text-sm" onClick={() => {
+                const base = date ? new Date(date) : new Date()
+                const d = new Date(base)
+                d.setDate(d.getDate() + 1)
+                const iso = d.toISOString().slice(0,10)
+                setDate(iso)
+              }}>▶</button>
+            </div>
+          </div>
+          {slotsLoading && (
+            <div className="mt-3 text-sm text-gray-500">Buscando horarios…</div>
+          )}
+          {!!slots.length && !slotsLoading && (
             <div className="mt-3 flex flex-wrap gap-2">
               {slots.map((t) => (
                 <button
@@ -130,6 +159,9 @@ export default function BookingPage(){
                 >{t}</button>
               ))}
             </div>
+          )}
+          {!slotsLoading && form.service_id && date && slots.length===0 && (
+            <div className="mt-3 text-sm text-gray-500">No hay horarios disponibles para esta fecha.</div>
           )}
           <div className="mt-3">
             <label className="block text-xs mb-1 text-gray-600">O elegir fecha y hora manualmente</label>

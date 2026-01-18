@@ -23,6 +23,7 @@ export default function ServiceForm({ categories, action, initial, createCategor
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
   const [tw, setTw] = useState<TimeWindow[]>(windows)
   const router = useRouter()
+  const [showTw, setShowTw] = useState(false)
 
   const toMinutes = (hhmm: string) => {
     const [h, m] = (hhmm || '00:00').split(':').map(Number)
@@ -132,50 +133,33 @@ export default function ServiceForm({ categories, action, initial, createCategor
         </div>
         <div className="grid md:grid-cols-2 gap-3">
           <div className="grid grid-cols-12 gap-2 items-end">
-            <div className="col-span-12 text-sm text-gray-600">Agregar rápido Lunes a Viernes</div>
-            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="09:00" onChange={(e)=>{ (e.target as any)._svStart = e.target.value }} />
-            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="13:00" onChange={(e)=>{ (e.target as any)._svEnd = e.target.value }} />
-            <button type="button" className="col-span-4 rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600" onClick={(e)=>{
+            <div className="col-span-12 text-sm text-gray-600">Editar Lunes a Viernes (hasta 2 bloques)</div>
+            <label className="col-span-12 text-xs text-gray-600">Bloque 1</label>
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="09:00" />
+            <span className="col-span-1 text-center">a</span>
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="13:00" />
+            <div className="col-span-12" />
+            <label className="col-span-12 text-xs text-gray-600">Bloque 2 (opcional)</label>
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="16:00" />
+            <span className="col-span-1 text-center">a</span>
+            <input type="time" className="col-span-4 border rounded px-3 py-2" defaultValue="22:00" />
+            <button type="button" className="col-span-12 rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600" onClick={(e)=>{
               const wrap = (e.currentTarget.parentElement as HTMLElement)
               const inputs = Array.from(wrap.querySelectorAll('input[type="time"]')) as HTMLInputElement[]
-              const s = inputs[0]?.value || '09:00'
-              const t = inputs[1]?.value || '13:00'
-              setTw(prev => ([
-                ...prev,
-                { weekday: 1, start_time: s, end_time: t },
-                { weekday: 2, start_time: s, end_time: t },
-                { weekday: 3, start_time: s, end_time: t },
-                { weekday: 4, start_time: s, end_time: t },
-                { weekday: 5, start_time: s, end_time: t },
-              ]))
-            }}>Agregar</button>
-            <div className="col-span-12 flex gap-2 mt-2">
-              <button type="button" className="rounded-md border px-3 py-2 text-sm bg-pink-500 text-white hover:bg-pink-600" onClick={() => {
-                setTw(prev => ([
-                  ...prev,
-                  { weekday: 1, start_time: '09:00', end_time: '13:00' },
-                  { weekday: 1, start_time: '16:00', end_time: '22:00' },
-                  { weekday: 2, start_time: '09:00', end_time: '13:00' },
-                  { weekday: 2, start_time: '16:00', end_time: '22:00' },
-                  { weekday: 3, start_time: '09:00', end_time: '13:00' },
-                  { weekday: 3, start_time: '16:00', end_time: '22:00' },
-                  { weekday: 4, start_time: '09:00', end_time: '13:00' },
-                  { weekday: 4, start_time: '16:00', end_time: '22:00' },
-                  { weekday: 5, start_time: '09:00', end_time: '13:00' },
-                  { weekday: 5, start_time: '16:00', end_time: '22:00' },
-                ]))
-              }}>L–V: 09–13 y 16–22</button>
-              <button type="button" className="rounded-md border px-3 py-2 text-sm bg-pink-100 text-pink-700 hover:bg-pink-200" onClick={() => {
-                setTw(prev => ([
-                  ...prev,
-                  { weekday: 1, start_time: '09:00', end_time: '22:00' },
-                  { weekday: 2, start_time: '09:00', end_time: '22:00' },
-                  { weekday: 3, start_time: '09:00', end_time: '22:00' },
-                  { weekday: 4, start_time: '09:00', end_time: '22:00' },
-                  { weekday: 5, start_time: '09:00', end_time: '22:00' },
-                ]))
-              }}>L–V: 09–22</button>
-            </div>
+              const b1s = inputs[0]?.value || ''
+              const b1e = inputs[1]?.value || ''
+              const b2s = inputs[2]?.value || ''
+              const b2e = inputs[3]?.value || ''
+              setTw(prev => {
+                // remover L-V existentes
+                const rest = prev.filter(w => w.weekday < 1 || w.weekday > 5)
+                const next: TimeWindow[] = [...rest]
+                if (b1s && b1e) { for (let d=1; d<=5; d++) next.push({ weekday: d, start_time: b1s, end_time: b1e }) }
+                if (b2s && b2e) { for (let d=1; d<=5; d++) next.push({ weekday: d, start_time: b2s, end_time: b2e }) }
+                return next
+              })
+              setShowTw(false)
+            }}>Aplicar a L–V</button>
           </div>
           <div className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-12 text-sm text-gray-600">Agregar rápido Sábado</div>
@@ -191,28 +175,35 @@ export default function ServiceForm({ categories, action, initial, createCategor
           </div>
         </div>
         <div className="space-y-2">
-          <div className="text-sm text-gray-600">Franjas por día</div>
-          <div className="space-y-2">
-            {tw.map((row, idx) => (
-              <div key={idx} className={`grid grid-cols-12 gap-2 items-end ${overlapIdx.has(idx) ? 'bg-red-50 border border-red-300 rounded p-2' : ''}`}>
-                <select name="tw_weekday" defaultValue={row.weekday} className="col-span-4 border rounded px-3 py-2">
-                  <option value={0}>Domingo</option>
-                  <option value={1}>Lunes</option>
-                  <option value={2}>Martes</option>
-                  <option value={3}>Miércoles</option>
-                  <option value={4}>Jueves</option>
-                  <option value={5}>Viernes</option>
-                  <option value={6}>Sábado</option>
-                </select>
-                <input name="tw_start" type="time" defaultValue={row.start_time} className="col-span-3 border rounded px-3 py-2" />
-                <input name="tw_end" type="time" defaultValue={row.end_time} className="col-span-3 border rounded px-3 py-2" />
-                <button type="button" className="col-span-2 rounded-md border px-3 py-2 text-sm bg-red-500 text-white hover:bg-red-600" onClick={() => setTw(tw.filter((_,i)=>i!==idx))}>Eliminar</button>
-                {overlapIdx.has(idx) && (
-                  <div className="col-span-12 text-xs text-red-700 mt-1">Esta franja se solapa con otra del mismo día</div>
-                )}
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">Franjas por día</div>
+            <button type="button" className="text-sm text-pink-700 hover:underline" onClick={()=>setShowTw(s=>!s)}>
+              {showTw ? 'Ocultar' : 'Ver'} ({tw.length})
+            </button>
           </div>
+          {showTw && (
+            <div className="space-y-2">
+              {tw.map((row, idx) => (
+                <div key={idx} className={`grid grid-cols-12 gap-2 items-end ${overlapIdx.has(idx) ? 'bg-red-50 border border-red-300 rounded p-2' : ''}`}>
+                  <select name="tw_weekday" defaultValue={row.weekday} className="col-span-4 border rounded px-3 py-2">
+                    <option value={0}>Domingo</option>
+                    <option value={1}>Lunes</option>
+                    <option value={2}>Martes</option>
+                    <option value={3}>Miércoles</option>
+                    <option value={4}>Jueves</option>
+                    <option value={5}>Viernes</option>
+                    <option value={6}>Sábado</option>
+                  </select>
+                  <input name="tw_start" type="time" defaultValue={row.start_time} className="col-span-3 border rounded px-3 py-2" />
+                  <input name="tw_end" type="time" defaultValue={row.end_time} className="col-span-3 border rounded px-3 py-2" />
+                  <button type="button" className="col-span-2 rounded-md border px-3 py-2 text-sm bg-red-500 text-white hover:bg-red-600" onClick={() => setTw(tw.filter((_,i)=>i!==idx))}>Eliminar</button>
+                  {overlapIdx.has(idx) && (
+                    <div className="col-span-12 text-xs text-red-700 mt-1">Esta franja se solapa con otra del mismo día</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex gap-2">
             <button
               type="button"
