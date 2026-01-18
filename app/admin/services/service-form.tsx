@@ -5,18 +5,22 @@ import { useFormState } from 'react-dom'
 
 type Category = { id: string; name: string }
 
+type TimeWindow = { id?: string; weekday: number; start_time: string; end_time: string }
+
 type Props = {
   categories: Category[]
   action: (prevState: any, formData: FormData) => Promise<{ success?: boolean; error?: string } | undefined>
   initial?: any | null
   createCategory?: (prevState: any, formData: FormData) => Promise<{ success?: boolean; error?: string } | undefined>
+  windows?: TimeWindow[]
 }
 
-export default function ServiceForm({ categories, action, initial, createCategory }: Props){
+export default function ServiceForm({ categories, action, initial, createCategory, windows = [] }: Props){
   const [state, formAction] = useFormState(action, null as any)
   const [catState, catAction] = useFormState(createCategory || (async()=>undefined) as any, null as any)
   const [mainPreview, setMainPreview] = useState<string | null>(null)
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
+  const [tw, setTw] = useState<TimeWindow[]>(windows)
 
   useEffect(() => {
     return () => {
@@ -73,6 +77,46 @@ export default function ServiceForm({ categories, action, initial, createCategor
             <label className="block text-xs text-gray-600 mb-1">Descripción</label>
             <textarea name="description" className="w-full border rounded px-3 py-2 min-h-[72px]" placeholder="Descripción breve del servicio" defaultValue={initial?.description || ''} />
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="font-medium">Agenda</h3>
+        <div className="grid md:grid-cols-3 gap-3 items-end">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Intervalo de turnos</label>
+            <select name="slot_interval_minutes" defaultValue={initial?.slot_interval_minutes ?? 60} className="w-full border rounded px-3 py-2">
+              <option value={15}>15 minutos</option>
+              <option value={30}>30 minutos</option>
+              <option value={60}>60 minutos</option>
+            </select>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="text-sm text-gray-600">Franjas por día</div>
+          <div className="space-y-2">
+            {tw.map((row, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-2 items-end">
+                <select name="tw_weekday" defaultValue={row.weekday} className="col-span-4 border rounded px-3 py-2">
+                  <option value={0}>Domingo</option>
+                  <option value={1}>Lunes</option>
+                  <option value={2}>Martes</option>
+                  <option value={3}>Miércoles</option>
+                  <option value={4}>Jueves</option>
+                  <option value={5}>Viernes</option>
+                  <option value={6}>Sábado</option>
+                </select>
+                <input name="tw_start" type="time" defaultValue={row.start_time} className="col-span-3 border rounded px-3 py-2" />
+                <input name="tw_end" type="time" defaultValue={row.end_time} className="col-span-3 border rounded px-3 py-2" />
+                <button type="button" className="col-span-2 rounded-md border px-3 py-2 text-sm" onClick={() => setTw(tw.filter((_,i)=>i!==idx))}>Eliminar</button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="rounded-md border px-3 py-2 text-sm"
+            onClick={() => setTw([...tw, { weekday: 1, start_time: '09:00', end_time: '13:00' }])}
+          >Agregar franja</button>
         </div>
       </section>
 
