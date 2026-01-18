@@ -158,7 +158,7 @@ export default function BookingPage(){
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Reservar</h1>
       <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
-        <div>
+        <div className="relative z-[9999] pointer-events-auto">
           <label className="block text-sm mb-1">Categoría</label>
           <select className="w-full border rounded px-3 py-2 mb-2 relative z-50 bg-white cursor-pointer" value={categoryId} onChange={e=>{ setCategoryId(e.target.value); setForm(f=>({ ...f, service_id: '' })) }}>
             <option value="">Seleccioná categoría…</option>

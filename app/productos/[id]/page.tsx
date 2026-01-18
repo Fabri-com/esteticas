@@ -20,13 +20,17 @@ export default function ProductoDetalle({ params }: { params: { id: string } }){
         .select('id,name,price,image_url,description, product_categories(name)')
         .eq('id', id)
         .maybeSingle()
+      // product_categories puede venir como objeto o como array según el cliente
+      const catName = Array.isArray((data as any)?.product_categories)
+        ? (data as any).product_categories[0]?.name
+        : (data as any)?.product_categories?.name
       setP(data ? {
         id: data.id,
         name: data.name,
         price: Number(data.price||0),
         image_url: data.image_url,
         description: data.description,
-        category_name: data.product_categories?.name || undefined,
+        category_name: catName || undefined,
       } : null)
       setLoading(false)
     }
