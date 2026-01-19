@@ -112,7 +112,21 @@ export default function BookingPage(){
         cur += interval
       }
     }
-    return produced
+    // Consultar turnos ocupados (confirmados o pendientes vigentes) y filtrar
+    const { data: booked } = await supabase.rpc('get_booked_intervals', { p_service_id: svcId, p_date: dateISO })
+    if (!booked || !booked.length) return produced
+    const bookings = (booked as Array<{ start_time: string; end_time: string }>).map((b) => {
+      const [sH, sM] = String(b.start_time).split(':').map(Number)
+      const [eH, eM] = String(b.end_time).split(':').map(Number)
+      return { start: sH*60 + sM, end: eH*60 + eM }
+    })
+    const filtered = produced.filter(t => {
+      const [h, m] = t.split(':').map(Number)
+      const startMin = h*60 + m
+      const endMin = startMin + interval
+      return !bookings.some(b => startMin < b.end && endMin > b.start)
+    })
+    return filtered
   }
 
   // Cargar slots cuando cambia servicio o fecha

@@ -22,7 +22,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   const end = new Date(start); end.setDate(end.getDate() + 1)
   const { data: appts } = await supabase
     .from('appointments')
-    .select('id,start_at,end_at,status,notes, customers(full_name,phone), services(name,price,service_categories(name))')
+    .select('id,start_at,end_at,status,notes, customers(full_name,phone), services(name,price,category)')
     .gte('start_at', start.toISOString())
     .lt('start_at', end.toISOString())
     .order('start_at')
@@ -49,7 +49,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
     const matchStatus = !statusFilter || a.status === statusFilter
     const cust = Array.isArray(a.customers) ? a.customers[0] : (a.customers as any)
     const svc = Array.isArray(a.services) ? a.services[0] : (a.services as any)
-    const catName = Array.isArray(svc?.service_categories) ? svc?.service_categories?.[0]?.name : svc?.service_categories?.name
+    const catName = svc?.category
     const phone = String(cust?.phone || '')
     const full = String(cust?.full_name || '')
     const text = `${full} ${phone} ${svc?.name || ''} ${catName || ''}`.toLowerCase()
@@ -157,7 +157,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
         {filtered.map(a => {
           const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
           const cust = Array.isArray(a.customers) ? (a.customers as any[])[0] : (a.customers as any)
-          const catName = Array.isArray(svc?.service_categories) ? svc?.service_categories?.[0]?.name : svc?.service_categories?.name
+          const catName = svc?.category
           const phoneDigits = String(cust?.phone||'').replace(/\D/g,'')
           const to = `https://wa.me/54${phoneDigits}`
           const dateAr = new Date(a.start_at).toLocaleDateString('es-AR', { timeZone: tz })
