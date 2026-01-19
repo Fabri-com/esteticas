@@ -20,19 +20,11 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   const tomorrowISO = (() => { const dd = new Date(`${todayArISO}T00:00:00-03:00`); dd.setDate(dd.getDate()+1); return dd.toLocaleDateString('en-CA', { timeZone: tz }) })()
   const start = new Date(`${selectedDateISO}T00:00:00-03:00`)
   const end = new Date(start); end.setDate(end.getDate() + 1)
-  const { data: appts } = await supabase
-    .from('appointments')
-    .select('id,start_at,end_at,status,notes, customer_id, service_id')
-    .gte('start_at', start.toISOString())
-    .lt('start_at', end.toISOString())
-    .order('start_at')
-
-  const customerIds = Array.from(new Set((appts||[]).map(a=>a.customer_id).filter(Boolean)))
-  const serviceIds = Array.from(new Set((appts||[]).map(a=>a.service_id).filter(Boolean)))
-  const { data: customers } = customerIds.length ? await supabase.from('customers').select('id,full_name,phone').in('id', customerIds) : { data: [] as any[] }
-  const { data: services } = serviceIds.length ? await supabase.from('services').select('id,name,price,category').in('id', serviceIds) : { data: [] as any[] }
-  const custMap = new Map((customers||[]).map(c=>[c.id,c]))
-  const svcMap = new Map((services||[]).map(s=>[s.id,s]))
+  // Usar RPC denormalizada para evitar problemas de joins y simplificar render
+  const { data: appts } = await supabase.rpc('admin_list_appointments', {
+    p_start: start.toISOString(),
+    p_end: end.toISOString(),
+  })
 
   async function updateStatus(formData: FormData) {
     'use server'
@@ -52,14 +44,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
   const statusFilter = (searchParams?.status || '').trim()
   const q = (searchParams?.q || '').trim().toLowerCase()
-  const filtered = (appts || []).filter(a => {
+  const filtered = (appts || []).filter((a: any) => {
     const matchStatus = !statusFilter || a.status === statusFilter
-    const cust = custMap.get(a.customer_id)
-    const svc = svcMap.get(a.service_id)
-    const catName = svc?.category
-    const phone = String(cust?.phone || '')
-    const full = String(cust?.full_name || '')
-    const text = `${full} ${phone} ${svc?.name || ''} ${catName || ''}`.toLowerCase()
+    const catName = a.service_category
+    const phone = String(a.customer_phone || '')
+    const full = String(a.customer_full_name || '')
+    const text = `${full} ${phone} ${a.service_name || ''} ${catName || ''}`.toLowerCase()
     const matchQ = !q || text.includes(q)
     return matchStatus && matchQ
   })
@@ -73,16 +63,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
     cancelled: 'Cancelado',
     no_show: 'Ausente',
   } as Record<string,string>)[s] || s
-  const confirmedList = filtered.filter(x=>x.status==='confirmed')
-  const confirmedRevenue = confirmedList.reduce((acc, a) => {
-    const svc = svcMap.get(a.service_id)
-    return acc + Number(svc?.price || 0)
-  }, 0)
-  const pendingList = filtered.filter(x=>x.status==='pending_whatsapp')
-  const pendingRevenue = pendingList.reduce((acc, a) => {
-    const svc = svcMap.get(a.service_id)
-    return acc + Number(svc?.price || 0)
-  }, 0)
+  const confirmedList = (filtered as any[]).filter((x: any)=>x.status==='confirmed')
+  const confirmedRevenue = confirmedList.reduce((acc: number, a: any) => acc + Number(a.service_price || 0), 0)
+  const pendingList = (filtered as any[]).filter((x: any)=>x.status==='pending_whatsapp')
+  const pendingRevenue = pendingList.reduce((acc: number, a: any) => acc + Number(a.service_price || 0), 0)
 
   return (
     <div className="space-y-6">
@@ -132,13 +116,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
       {/* KPIs del día */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        {(() => { const list = filtered; return [
+        {(() => { const list = filtered as any[]; return [
           { label: 'Total', val: list.length },
-          { label: 'Pendientes', val: list.filter(x=>x.status==='pending_whatsapp').length },
-          { label: 'Confirmados', val: list.filter(x=>x.status==='confirmed').length },
-          { label: 'Finalizados', val: list.filter(x=>x.status==='done').length },
+          { label: 'Pendientes', val: list.filter((x:any)=>x.status==='pending_whatsapp').length },
+          { label: 'Confirmados', val: list.filter((x:any)=>x.status==='confirmed').length },
+          { label: 'Finalizados', val: list.filter((x:any)=>x.status==='done').length },
           { label: 'Ingresos confirmados', val: fmtPrice(confirmedRevenue) },
-        ].map(k => (
+        ].map((k: any) => (
           <div key={k.label} className="rounded-lg border bg-white p-3"><div className="text-xs text-gray-500">{k.label}</div><div className="text-xl font-semibold">{k.val}</div></div>
         )) })()}
       </div>
@@ -149,37 +133,35 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           <div>
             Hoy cerramos con <span className="font-semibold">{confirmedList.length}</span> reservas confirmadas{confirmedRevenue>0 ? (<>
               {' '}({fmtPrice(confirmedRevenue)} estimados)
-            </>) : null}. Pendientes: <span className="font-semibold">{filtered.filter(x=>x.status==='pending_whatsapp').length}</span>. Finalizados: <span className="font-semibold">{filtered.filter(x=>x.status==='done').length}</span>.
+            </>) : null}. Pendientes: <span className="font-semibold">{(filtered as any[]).filter((x:any)=>x.status==='pending_whatsapp').length}</span>. Finalizados: <span className="font-semibold">{(filtered as any[]).filter((x:any)=>x.status==='done').length}</span>.
           </div>
         ) : (
           <div>
             Para el <span className="font-semibold">{new Date(selectedDateISO+"T00:00:00-03:00").toLocaleDateString('es-AR',{ timeZone: tz })}</span> hay <span className="font-semibold">{confirmedList.length}</span> reservas confirmadas{confirmedRevenue>0 ? (<>
               {' '}({fmtPrice(confirmedRevenue)} estimados)
-            </>) : null} y <span className="font-semibold">{filtered.filter(x=>x.status==='pending_whatsapp').length}</span> pendientes para contactar.
+            </>) : null} y <span className="font-semibold">{(filtered as any[]).filter((x:any)=>x.status==='pending_whatsapp').length}</span> pendientes para contactar.
           </div>
         )}
       </div>
 
       <div className="space-y-3">
-        {filtered.map(a => {
-          const svc = svcMap.get(a.service_id)
-          const cust = custMap.get(a.customer_id)
-          const catName = svc?.category
-          const phoneDigits = String(cust?.phone||'').replace(/\D/g,'')
+        {filtered.map((a: any) => {
+          const catName = a.service_category
+          const phoneDigits = String(a.customer_phone||'').replace(/\D/g,'')
           const to = `https://wa.me/54${phoneDigits}`
           const dateAr = new Date(a.start_at).toLocaleDateString('es-AR', { timeZone: tz })
           const timeAr = fmtTime(a.start_at)
-          const msg = encodeURIComponent(`Hola ${cust?.full_name||''}! Te recordamos tu turno de ${svc?.name||''} (${catName||''}) para el ${dateAr} a las ${timeAr}.`)
+          const msg = encodeURIComponent(`Hola ${a.customer_full_name||''}! Te recordamos tu turno de ${a.service_name||''} (${catName||''}) para el ${dateAr} a las ${timeAr}.`)
           const waLink = `${to}?text=${msg}`
           return (
             <div key={a.id} className="rounded-xl border bg-white p-3 flex items-center justify-between gap-4">
               <div className="space-y-0.5">
                 <div className="text-sm text-gray-500">{fmtTime(a.start_at)} - {fmtTime(a.end_at)}</div>
                 <div className="font-medium">
-                  {svc?.name} {catName ? <span className="text-xs text-gray-500">• {catName}</span> : null}
+                  {a.service_name} {catName ? <span className="text-xs text-gray-500">• {catName}</span> : null}
                 </div>
-                <div className="text-sm text-gray-700">{cust?.full_name || '-'} • {cust?.phone || ''}</div>
-                <div className="text-sm text-pink-700">{fmtPrice(svc?.price)}</div>
+                <div className="text-sm text-gray-700">{a.customer_full_name || '-'} • {a.customer_phone || ''}</div>
+                <div className="text-sm text-pink-700">{fmtPrice(a.service_price)}</div>
                 <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
                   a.status==='confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
                   a.status==='pending_whatsapp' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
@@ -192,8 +174,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                 <a href={waLink} target="_blank" className="px-2 py-1 rounded border text-sm">WhatsApp</a>
                 <form action={updateStatus} className="flex items-center gap-2">
                   <input type="hidden" name="id" value={a.id} />
-                  <select name="status" className="border rounded px-2 py-1 text-sm">
-                    {['pending_whatsapp','confirmed','done','cancelled','no_show'].map(s => <option key={s} value={s} selected={s===a.status}>{labelStatus(s)}</option>)}
+                  <select name="status" className="border rounded px-2 py-1 text-sm" defaultValue={a.status}>
+                    {['pending_whatsapp','confirmed','done','cancelled','no_show'].map(s => <option key={s} value={s}>{labelStatus(s)}</option>)}
                   </select>
                   <button className="btn py-1">Actualizar</button>
                 </form>
