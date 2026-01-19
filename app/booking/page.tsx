@@ -22,6 +22,7 @@ export default function BookingPage(){
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ service_id: '', start_at: '', full_name: '', phone: '', email: '', notes: '' })
   const [errors, setErrors] = useState<Record<string,string>>({})
+  const [notice, setNotice] = useState<{ type: 'success'|'error'; msg: string }|null>(null)
   const [date, setDate] = useState<string>('')
   const [slots, setSlots] = useState<string[]>([])
   const [slotsLoading, setSlotsLoading] = useState(false)
@@ -150,17 +151,29 @@ export default function BookingPage(){
       return
     }
     setLoading(true)
+    setNotice(null)
     const res = await fetch('/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
     const data = await res.json()
     setLoading(false)
-    if (data.whatsapp_link) {
-      window.location.href = data.whatsapp_link
+    if (res.ok && data.whatsapp_link) {
+      // Mostrar aviso y abrir WhatsApp (fallback si popup bloqueado)
+      setNotice({ type: 'success', msg: 'Tu reserva fue enviada. En breve te confirmamos por WhatsApp.' })
+      try {
+        window.open(data.whatsapp_link, '_blank')
+      } catch {}
+    } else {
+      setNotice({ type: 'error', msg: data.error || 'No se pudo crear la reserva. Probá nuevamente.' })
     }
   }
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Reservar</h1>
+      {notice && (
+        <div className={`rounded border px-3 py-2 text-sm ${notice.type==='success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          {notice.msg}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
         <div className="relative z-[9999] pointer-events-auto">
           <label className="block text-sm mb-1">Categoría</label>

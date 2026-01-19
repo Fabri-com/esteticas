@@ -17,6 +17,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   const tz = 'America/Argentina/Buenos_Aires'
   const todayArISO = new Date().toLocaleDateString('en-CA', { timeZone: tz })
   const selectedDateISO = (searchParams?.date && /\d{4}-\d{2}-\d{2}/.test(searchParams.date)) ? searchParams!.date! : todayArISO
+  const tomorrowISO = (() => { const d = new Date(new Date().toLocaleDateString('en-CA', { timeZone: tz })); const dd = new Date(`${todayArISO}T00:00:00-03:00`); dd.setDate(dd.getDate()+1); return dd.toLocaleDateString('en-CA', { timeZone: tz }) })()
   const start = new Date(`${selectedDateISO}T00:00:00-03:00`)
   const end = new Date(start); end.setDate(end.getDate() + 1)
   const { data: appts } = await supabase
@@ -63,6 +64,11 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
     const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
     return acc + Number(svc?.price || 0)
   }, 0)
+  const pendingList = filtered.filter(x=>x.status==='pending_whatsapp')
+  const pendingRevenue = pendingList.reduce((acc, a) => {
+    const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
+    return acc + Number(svc?.price || 0)
+  }, 0)
 
   return (
     <div className="space-y-6">
@@ -73,6 +79,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           <Link href="/admin/productos" className="btn">Productos</Link>
           <Link href="/admin/academy" className="btn">Academia</Link>
           <form action={cleanupPending}><button className="btn bg-gray-900 hover:bg-black">Limpiar pendientes</button></form>
+          <Link href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn">Actualizar</Link>
+          <Link href={`/admin/export?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn">Exportar CSV</Link>
         </div>
       </div>
 
@@ -81,7 +89,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           <input type="hidden" name="status" value={statusFilter} />
           <input type="hidden" name="q" value={q} />
           <button className={`px-3 py-1 rounded-full border text-sm ${selectedDateISO===todayArISO ? 'bg-pink-500 text-white border-pink-500' : 'hover:bg-pink-50'}`} name="date" value={todayArISO}>Hoy</button>
-          <button className={`px-3 py-1 rounded-full border text-sm ${(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toLocaleDateString('en-CA',{timeZone:tz})})()===selectedDateISO ? 'bg-pink-500 text-white border-pink-500' : 'hover:bg-pink-50'}`} name="date" value={(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toLocaleDateString('en-CA',{timeZone:tz})})()}>Mañana</button>
+          <button className={`px-3 py-1 rounded-full border text-sm ${tomorrowISO===selectedDateISO ? 'bg-pink-500 text-white border-pink-500' : 'hover:bg-pink-50'}`} name="date" value={tomorrowISO}>Mañana</button>
           <input type="date" className="border rounded px-3 py-1 text-sm" name="date" defaultValue={selectedDateISO} />
           <button className="px-3 py-1 rounded border text-sm">Ir</button>
         </form>
@@ -102,12 +110,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       </div>
 
       {/* KPIs del día */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {(() => { const list = filtered; return [
           { label: 'Total', val: list.length },
           { label: 'Pendientes', val: list.filter(x=>x.status==='pending_whatsapp').length },
           { label: 'Confirmados', val: list.filter(x=>x.status==='confirmed').length },
           { label: 'Finalizados', val: list.filter(x=>x.status==='done').length },
+          { label: 'Ingresos confirmados', val: fmtPrice(confirmedRevenue) },
         ].map(k => (
           <div key={k.label} className="rounded-lg border bg-white p-3"><div className="text-xs text-gray-500">{k.label}</div><div className="text-xl font-semibold">{k.val}</div></div>
         )) })()}
@@ -150,7 +159,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                 </div>
                 <div className="text-sm text-gray-700">{cust?.full_name || '-'} • {cust?.phone || ''}</div>
                 <div className="text-sm text-pink-700">{fmtPrice(svc?.price)}</div>
-                <div className="text-xs text-gray-600">{a.status}</div>
+                <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                  a.status==='confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                  a.status==='pending_whatsapp' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+                  a.status==='done' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                  a.status==='cancelled' ? 'bg-gray-100 text-gray-700 border' :
+                  a.status==='no_show' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-gray-50 text-gray-600 border'
+                }`}>{a.status}</div>
               </div>
               <div className="flex items-center gap-2">
                 <a href={waLink} target="_blank" className="px-2 py-1 rounded border text-sm">WhatsApp</a>
