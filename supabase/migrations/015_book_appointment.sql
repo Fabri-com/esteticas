@@ -21,9 +21,12 @@ begin
   on conflict (phone) do update set full_name = excluded.full_name, email = excluded.email;
 
   return query
-  insert into appointments(customer_id, service_id, start_at, end_at, status, notes, expires_at)
-  select c.id, p_service_id, p_start_at, p_end_at, 'pending_whatsapp', nullif(p_notes,''), p_expires_at
-  from customers c where c.phone = p_phone
-  returning id;
+  with ins as (
+    insert into appointments(customer_id, service_id, start_at, end_at, status, notes, expires_at)
+    select c.id, p_service_id, p_start_at, p_end_at, 'pending_whatsapp', nullif(p_notes,''), p_expires_at
+    from customers c where c.phone = p_phone
+    returning appointments.id
+  )
+  select ins.id from ins;
 end;
 $$;

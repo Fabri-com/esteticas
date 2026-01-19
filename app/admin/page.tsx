@@ -17,7 +17,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   const tz = 'America/Argentina/Buenos_Aires'
   const todayArISO = new Date().toLocaleDateString('en-CA', { timeZone: tz })
   const selectedDateISO = (searchParams?.date && /\d{4}-\d{2}-\d{2}/.test(searchParams.date)) ? searchParams!.date! : todayArISO
-  const tomorrowISO = (() => { const d = new Date(new Date().toLocaleDateString('en-CA', { timeZone: tz })); const dd = new Date(`${todayArISO}T00:00:00-03:00`); dd.setDate(dd.getDate()+1); return dd.toLocaleDateString('en-CA', { timeZone: tz }) })()
+  const tomorrowISO = (() => { const dd = new Date(`${todayArISO}T00:00:00-03:00`); dd.setDate(dd.getDate()+1); return dd.toLocaleDateString('en-CA', { timeZone: tz }) })()
   const start = new Date(`${selectedDateISO}T00:00:00-03:00`)
   const end = new Date(start); end.setDate(end.getDate() + 1)
   const { data: appts } = await supabase
