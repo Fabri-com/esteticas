@@ -83,11 +83,17 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
+        {/* Form 1: accesos rápidos Hoy/Mañana (sin input date para evitar doble parámetro) */}
         <form className="flex gap-2" method="get">
           <input type="hidden" name="status" value={statusFilter} />
           <input type="hidden" name="q" value={q} />
           <button className={`px-3 py-1 rounded-full border text-sm ${selectedDateISO===todayArISO ? 'bg-pink-500 text-white border-pink-500' : 'hover:bg-pink-50'}`} name="date" value={todayArISO}>Hoy</button>
           <button className={`px-3 py-1 rounded-full border text-sm ${tomorrowISO===selectedDateISO ? 'bg-pink-500 text-white border-pink-500' : 'hover:bg-pink-50'}`} name="date" value={tomorrowISO}>Mañana</button>
+        </form>
+        {/* Form 2: selector de fecha explícito */}
+        <form className="flex gap-2" method="get">
+          <input type="hidden" name="status" value={statusFilter} />
+          <input type="hidden" name="q" value={q} />
           <input type="date" className="border rounded px-3 py-1 text-sm" name="date" defaultValue={selectedDateISO} />
           <button className="px-3 py-1 rounded border text-sm">Ir</button>
         </form>
