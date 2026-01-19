@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import DuoIcon from '@/components/ui/duo-icon'
 
 type Course = {
   id: string
@@ -54,7 +55,9 @@ export default function AcademyPage(){
     <div className="space-y-12">
       <section className="text-center py-10 bg-pink-50/50 rounded-xl">
         <div className="max-w-2xl mx-auto space-y-3">
-          <div className="text-3xl">🎓</div>
+          <div className="flex justify-center">
+            <DuoIcon name="certificate" className="w-10 h-10" />
+          </div>
           <h1 className="text-3xl md:text-4xl font-semibold">Academia de Belleza Profesional</h1>
           <p className="text-gray-600">Formación de excelencia en estética y belleza. Convertí tu pasión en tu profesión con nuestros cursos certificados.</p>
         </div>
@@ -81,12 +84,30 @@ export default function AcademyPage(){
                 <div className="p-4 space-y-2">
                   <div className="font-medium">{c.title}</div>
                   <div className="text-xs text-gray-500 flex flex-wrap items-center gap-3">
-                    {c.duration_weeks!=null && <span>⏱ {c.duration_weeks} semanas</span>}
-                    {c.students!=null && <span>👥 {c.students} estudiantes</span>}
-                    {c.seats!=null && <span>🎟 {c.seats} cupos</span>}
-                    {c.mode && <span>🏫 {c.mode}</span>}
+                    {c.duration_weeks!=null && (
+                      <span className="inline-flex items-center gap-1">
+                        <DuoIcon name="hourglass" className="w-3.5 h-3.5" /> {c.duration_weeks} semanas
+                      </span>
+                    )}
+                    {c.students!=null && (
+                      <span className="inline-flex items-center gap-1">
+                        <DuoIcon name="users" className="w-3.5 h-3.5" /> {c.students} estudiantes
+                      </span>
+                    )}
+                    {c.seats!=null && (
+                      <span className="inline-flex items-center gap-1">
+                        <DuoIcon name="users" className="w-3.5 h-3.5" /> {c.seats} cupos
+                      </span>
+                    )}
+                    {c.mode && (
+                      <span className="inline-flex items-center gap-1">
+                        <DuoIcon name="book" className="w-3.5 h-3.5" /> {c.mode}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-pink-600 font-semibold">{formatPrice(c.price)}</div>
+                  <div className="text-pink-600 font-semibold inline-flex items-center gap-1">
+                    <DuoIcon name="money" className="w-4 h-4" /> {formatPrice(c.price)}
+                  </div>
                   <div className="flex gap-2 pt-1">
                     <Link href={`/academy/${c.id}`} className="px-3 py-1 rounded border text-sm">Ver detalles</Link>
                     <a href={`https://wa.me/?text=${encodeURIComponent('Hola! Me interesa el curso '+c.title+'. ¿Podrían darme más info?')}`} target="_blank" className="px-3 py-1 rounded bg-pink-500 text-white text-sm">Consultar</a>
