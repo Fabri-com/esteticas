@@ -22,10 +22,17 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   const end = new Date(start); end.setDate(end.getDate() + 1)
   const { data: appts } = await supabase
     .from('appointments')
-    .select('id,start_at,end_at,status,notes, customers(full_name,phone), services(name,price,category)')
+    .select('id,start_at,end_at,status,notes, customer_id, service_id')
     .gte('start_at', start.toISOString())
     .lt('start_at', end.toISOString())
     .order('start_at')
+
+  const customerIds = Array.from(new Set((appts||[]).map(a=>a.customer_id).filter(Boolean)))
+  const serviceIds = Array.from(new Set((appts||[]).map(a=>a.service_id).filter(Boolean)))
+  const { data: customers } = customerIds.length ? await supabase.from('customers').select('id,full_name,phone').in('id', customerIds) : { data: [] as any[] }
+  const { data: services } = serviceIds.length ? await supabase.from('services').select('id,name,price,category').in('id', serviceIds) : { data: [] as any[] }
+  const custMap = new Map((customers||[]).map(c=>[c.id,c]))
+  const svcMap = new Map((services||[]).map(s=>[s.id,s]))
 
   async function updateStatus(formData: FormData) {
     'use server'
@@ -47,8 +54,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   const q = (searchParams?.q || '').trim().toLowerCase()
   const filtered = (appts || []).filter(a => {
     const matchStatus = !statusFilter || a.status === statusFilter
-    const cust = Array.isArray(a.customers) ? a.customers[0] : (a.customers as any)
-    const svc = Array.isArray(a.services) ? a.services[0] : (a.services as any)
+    const cust = custMap.get(a.customer_id)
+    const svc = svcMap.get(a.service_id)
     const catName = svc?.category
     const phone = String(cust?.phone || '')
     const full = String(cust?.full_name || '')
@@ -68,12 +75,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
   } as Record<string,string>)[s] || s
   const confirmedList = filtered.filter(x=>x.status==='confirmed')
   const confirmedRevenue = confirmedList.reduce((acc, a) => {
-    const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
+    const svc = svcMap.get(a.service_id)
     return acc + Number(svc?.price || 0)
   }, 0)
   const pendingList = filtered.filter(x=>x.status==='pending_whatsapp')
   const pendingRevenue = pendingList.reduce((acc, a) => {
-    const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
+    const svc = svcMap.get(a.service_id)
     return acc + Number(svc?.price || 0)
   }, 0)
 
@@ -155,8 +162,8 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
       <div className="space-y-3">
         {filtered.map(a => {
-          const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
-          const cust = Array.isArray(a.customers) ? (a.customers as any[])[0] : (a.customers as any)
+          const svc = svcMap.get(a.service_id)
+          const cust = custMap.get(a.customer_id)
           const catName = svc?.category
           const phoneDigits = String(cust?.phone||'').replace(/\D/g,'')
           const to = `https://wa.me/54${phoneDigits}`
