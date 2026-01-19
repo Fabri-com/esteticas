@@ -59,6 +59,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
   const fmtTime = (d: string) => new Date(d).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })
   const fmtPrice = (n?: number|null) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(n || 0))
+  const labelStatus = (s: string) => ({
+    pending_whatsapp: 'Pendiente WhatsApp',
+    confirmed: 'Confirmado',
+    done: 'Finalizado',
+    cancelled: 'Cancelado',
+    no_show: 'Ausente',
+  } as Record<string,string>)[s] || s
   const confirmedList = filtered.filter(x=>x.status==='confirmed')
   const confirmedRevenue = confirmedList.reduce((acc, a) => {
     const svc = Array.isArray(a.services) ? (a.services as any[])[0] : (a.services as any)
@@ -104,8 +111,15 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
       {/* Tabs de estado */}
       <div className="flex flex-wrap gap-2 border-b">
-        {['','pending_whatsapp','confirmed','done','cancelled','no_show'].map(s => (
-          <Link key={s||'all'} href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(s)}&q=${encodeURIComponent(q)}`} className={`px-3 py-2 text-sm border-b-2 ${statusFilter===s ? 'border-pink-500 text-pink-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>{s||'todos'}</Link>
+        {[
+          { value: '', label: 'Todos' },
+          { value: 'pending_whatsapp', label: labelStatus('pending_whatsapp') },
+          { value: 'confirmed', label: labelStatus('confirmed') },
+          { value: 'done', label: labelStatus('done') },
+          { value: 'cancelled', label: labelStatus('cancelled') },
+          { value: 'no_show', label: labelStatus('no_show') },
+        ].map(t => (
+          <Link key={t.value||'all'} href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(t.value)}&q=${encodeURIComponent(q)}`} className={`px-3 py-2 text-sm border-b-2 ${statusFilter===t.value ? 'border-pink-500 text-pink-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>{t.label}</Link>
         ))}
       </div>
 
@@ -165,14 +179,14 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                   a.status==='done' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                   a.status==='cancelled' ? 'bg-gray-100 text-gray-700 border' :
                   a.status==='no_show' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-gray-50 text-gray-600 border'
-                }`}>{a.status}</div>
+                }`}>{labelStatus(a.status)}</div>
               </div>
               <div className="flex items-center gap-2">
                 <a href={waLink} target="_blank" className="px-2 py-1 rounded border text-sm">WhatsApp</a>
                 <form action={updateStatus} className="flex items-center gap-2">
                   <input type="hidden" name="id" value={a.id} />
                   <select name="status" className="border rounded px-2 py-1 text-sm">
-                    {['pending_whatsapp','confirmed','done','cancelled','no_show'].map(s => <option key={s} value={s} selected={s===a.status}>{s}</option>)}
+                    {['pending_whatsapp','confirmed','done','cancelled','no_show'].map(s => <option key={s} value={s} selected={s===a.status}>{labelStatus(s)}</option>)}
                   </select>
                   <button className="btn py-1">Actualizar</button>
                 </form>
