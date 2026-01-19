@@ -86,7 +86,7 @@ export default function AcademyPage(){
                   <div className="text-xs text-gray-500 flex flex-wrap items-center gap-3">
                     {c.duration_weeks!=null && (
                       <span className="inline-flex items-center gap-1">
-                        <DuoIcon name="hourglass" className="w-3.5 h-3.5" /> {c.duration_weeks} semanas
+                        <DuoIcon name="clock" className="w-3.5 h-3.5" /> {c.duration_weeks} semanas
                       </span>
                     )}
                     {c.students!=null && (
