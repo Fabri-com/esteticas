@@ -70,20 +70,18 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-semibold">Agenda</h1>
-        <div className="flex gap-2">
-          <Link href="/admin/services" className="btn">Servicios</Link>
-          <Link href="/admin/productos" className="btn">Productos</Link>
-          <Link href="/admin/academy" className="btn">Academia</Link>
-          <Link href="/admin/home" className="btn">Home</Link>
-          <form action={cleanupPending}><button className="btn bg-gray-900 hover:bg-black">Limpiar pendientes</button></form>
-          <Link href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn">Actualizar</Link>
-          <Link href={`/admin/export?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn">Exportar CSV</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/services" className="btn px-3 py-1.5 text-sm">Servicios</Link>
+          <Link href="/admin/productos" className="btn px-3 py-1.5 text-sm">Productos</Link>
+          <Link href="/admin/academy" className="btn px-3 py-1.5 text-sm">Academia</Link>
+          <Link href="/admin/home" className="btn px-3 py-1.5 text-sm">Home</Link>
+          <Link href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn px-3 py-1.5 text-sm">Actualizar</Link>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-center gap-3">
         {/* Form 1: accesos rápidos Hoy/Mañana (sin input date para evitar doble parámetro) */}
         <form className="flex gap-2" method="get">
           <input type="hidden" name="status" value={statusFilter} />
@@ -108,7 +106,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
       </div>
 
       {/* Tabs de estado */}
-      <div className="flex flex-wrap gap-2 border-b">
+      <div className="flex gap-2 border-b overflow-x-auto whitespace-nowrap no-scrollbar">
         {[
           { value: '', label: 'Todos' },
           { value: 'pending_whatsapp', label: labelStatus('pending_whatsapp') },
@@ -117,12 +115,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           { value: 'cancelled', label: labelStatus('cancelled') },
           { value: 'no_show', label: labelStatus('no_show') },
         ].map(t => (
-          <Link key={t.value||'all'} href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(t.value)}&q=${encodeURIComponent(q)}`} className={`px-3 py-2 text-sm border-b-2 ${statusFilter===t.value ? 'border-pink-500 text-pink-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>{t.label}</Link>
+          <Link key={t.value||'all'} href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(t.value)}&q=${encodeURIComponent(q)}`} className={`inline-block px-3 py-2 text-sm border-b-2 ${statusFilter===t.value ? 'border-pink-500 text-pink-600' : 'border-transparent text-gray-600 hover:text-gray-800'}`}>{t.label}</Link>
         ))}
       </div>
 
       {/* KPIs del día */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory">
         {(() => { const list = filtered as any[]; return [
           { label: 'Total', val: list.length },
           { label: 'Pendientes', val: list.filter((x:any)=>x.status==='pending_whatsapp').length },
@@ -130,7 +128,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           { label: 'Finalizados', val: list.filter((x:any)=>x.status==='done').length },
           { label: 'Ingresos confirmados', val: fmtPrice(confirmedRevenue) },
         ].map((k: any) => (
-          <div key={k.label} className="rounded-lg border bg-white p-3"><div className="text-xs text-gray-500">{k.label}</div><div className="text-xl font-semibold">{k.val}</div></div>
+          <div key={k.label} className="min-w-[140px] snap-start rounded-lg border bg-white p-3"><div className="text-xs text-gray-500">{k.label}</div><div className="text-xl font-semibold">{k.val}</div></div>
         )) })()}
       </div>
 
@@ -161,7 +159,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           const msg = encodeURIComponent(`Hola ${a.customer_full_name||''}! Te recordamos tu turno de ${a.service_name||''} (${catName||''}) para el ${dateAr} a las ${timeAr}.`)
           const waLink = `${to}?text=${msg}`
           return (
-            <div key={a.id} className="rounded-xl border bg-white p-3 flex items-center justify-between gap-4">
+            <div key={a.id} className="rounded-xl border bg-white p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="space-y-0.5">
                 <div className="text-sm text-gray-500">{fmtTime(a.start_at)} - {fmtTime(a.end_at)}</div>
                 <div className="font-medium">
@@ -177,7 +175,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
                   a.status==='no_show' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-gray-50 text-gray-600 border'
                 }`}>{labelStatus(a.status)}</div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2 mt-2 sm:mt-0">
                 <a href={waLink} target="_blank" className="px-2 py-1 rounded border text-sm">WhatsApp</a>
                 <form action={updateStatus} className="flex items-center gap-2">
                   <input type="hidden" name="id" value={a.id} />
