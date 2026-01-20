@@ -153,7 +153,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
         {filtered.map((a: any) => {
           const catName = a.service_category
           const phoneDigits = String(a.customer_phone||'').replace(/\D/g,'')
-          const to = `https://wa.me/54${phoneDigits}`
+          const to = `https://wa.me/${phoneDigits}`
           const dateAr = new Date(a.start_at).toLocaleDateString('es-AR', { timeZone: tz })
           const timeAr = fmtTime(a.start_at)
           const msg = encodeURIComponent(`Hola ${a.customer_full_name||''}! Te recordamos tu turno de ${a.service_name||''} (${catName||''}) para el ${dateAr} a las ${timeAr}.`)
