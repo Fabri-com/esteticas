@@ -76,6 +76,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams?: 
           <Link href="/admin/services" className="btn">Servicios</Link>
           <Link href="/admin/productos" className="btn">Productos</Link>
           <Link href="/admin/academy" className="btn">Academia</Link>
+          <Link href="/admin/home" className="btn">Home</Link>
           <form action={cleanupPending}><button className="btn bg-gray-900 hover:bg-black">Limpiar pendientes</button></form>
           <Link href={`/admin?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn">Actualizar</Link>
           <Link href={`/admin/export?date=${selectedDateISO}&status=${encodeURIComponent(statusFilter)}&q=${encodeURIComponent(q)}`} className="btn">Exportar CSV</Link>

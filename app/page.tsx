@@ -1,6 +1,19 @@
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = createClient()
+  const { data: photos } = await supabase
+    .from('home_photos')
+    .select('id,kind,title,alt,public_url,sort_order')
+    .eq('is_active', true)
+    .order('kind', { ascending: true })
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+  const hero = (photos||[]).find(p => p.kind === 'hero')
+  const gallery = (photos||[]).filter(p => p.kind === 'gallery')
+  const prodImg = gallery[0]
+  const academyImg = gallery[1]
   return (
     <div className="space-y-24">
       {/* Hero */}
@@ -15,7 +28,11 @@ export default function HomePage() {
               <Link href="/services" className="btn bg-gray-900 hover:bg-black">Ver servicios</Link>
             </div>
           </div>
-          <div className="aspect-video bg-white/70 border rounded-xl shadow-sm" />
+          {hero ? (
+            <img src={hero.public_url} alt={hero.alt||hero.title||'Foto principal'} className="aspect-video w-full object-cover border rounded-xl shadow-sm" />
+          ) : (
+            <div className="aspect-video bg-white/70 border rounded-xl shadow-sm" />
+          )}
         </div>
       </section>
 
@@ -46,7 +63,11 @@ export default function HomePage() {
 
       {/* Productos */}
       <section className="grid md:grid-cols-2 gap-8 items-center">
-        <div className="aspect-[16/10] rounded-xl border bg-pink-50" />
+        {prodImg ? (
+          <img src={prodImg.public_url} alt={prodImg.alt||prodImg.title||'Productos'} className="aspect-[16/10] w-full rounded-xl border object-cover" />
+        ) : (
+          <div className="aspect-[16/10] rounded-xl border bg-pink-50" />
+        )}
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">Productos de calidad premium</h3>
           <p className="text-gray-600">Descubrí nuestra selección de productos para el cuidado de tu belleza, las mismas marcas que usamos en el salón.</p>
@@ -75,7 +96,11 @@ export default function HomePage() {
             <Link href="/academy" className="btn">Conocer cursos</Link>
           </div>
         </div>
-        <div className="aspect-[16/10] rounded-xl border bg-pink-50" />
+        {academyImg ? (
+          <img src={academyImg.public_url} alt={academyImg.alt||academyImg.title||'Academia'} className="aspect-[16/10] w-full rounded-xl border object-cover" />
+        ) : (
+          <div className="aspect-[16/10] rounded-xl border bg-pink-50" />
+        )}
       </section>
 
       {/* CTA final */}
