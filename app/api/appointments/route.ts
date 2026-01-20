@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   const dateAr = start.toLocaleDateString('es-AR', { timeZone: tz })
   const timeAr = start.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })
   const id = Array.isArray(booked) ? booked[0]?.id : (booked as any)?.id
-  const text = `Hola! Soy ${full_name}. Quiero reservar ${service.name} el ${dateAr} a las ${timeAr}. ID: ${id || ''}${notes ? `. Notas: ${notes}` : ''}`
+  const text = `Hola! Soy ${full_name}. Quiero reservar ${service.name} el ${dateAr} a las ${timeAr}.${notes ? ` Notas: ${notes}` : ''}`
   const bizPhone = (process.env.BUSINESS_WHATSAPP_PHONE || '').trim()
   const base = bizPhone ? `https://wa.me/${bizPhone}` : 'https://wa.me/'
   const link = `${base}?text=${encodeURIComponent(text)}`

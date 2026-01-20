@@ -170,11 +170,9 @@ export default function BookingPage(){
     const data = await res.json()
     setLoading(false)
     if (res.ok && data.whatsapp_link) {
-      // Mostrar aviso y abrir WhatsApp (fallback si popup bloqueado)
+      // En iOS Safari los popups asíncronos se bloquean. Redirigimos directamente.
       setNotice({ type: 'success', msg: 'Tu reserva fue enviada. En breve te confirmamos por WhatsApp.' })
-      try {
-        window.open(data.whatsapp_link, '_blank')
-      } catch {}
+      window.location.href = data.whatsapp_link
     } else {
       setNotice({ type: 'error', msg: data.error || 'No se pudo crear la reserva. Probá nuevamente.' })
     }
