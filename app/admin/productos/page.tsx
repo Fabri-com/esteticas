@@ -122,7 +122,7 @@ export default async function AdminProductosPage({ searchParams }: { searchParam
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Productos</h1>
         <div className="flex gap-2">
-          <Link href="/admin" className="btn">Volver al Dashboard</Link>
+          <Link href="/admin" className="btn">Volver a Agenda</Link>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { randomUUID } from 'crypto'
 import ServiceForm from './service-form'
 
@@ -196,20 +197,23 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Servicios</h1>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-semibold">Servicios</h1>
+        <Link href="/admin" className="btn">Volver a Agenda</Link>
+      </div>
       <ServiceForm categories={categories || []} action={upsertService} createCategory={createCategory} initial={initialService} windows={initialWindows} />
 
       <div className="space-y-3">
         {services?.map(s => {
           const catName = categories?.find(c => c.id === s.category_id)?.name || s.category || '—'
           return (
-            <div key={s.id} className="card grid md:grid-cols-8 gap-2 items-center">
+            <div key={s.id} className="card grid grid-cols-1 md:grid-cols-8 gap-2 items-center">
               <div className="font-medium">{s.name}</div>
               <div>{catName}</div>
               <div>{s.duration_minutes}m</div>
               <div>{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(s.price ?? 0))}</div>
-              <div className="text-sm text-gray-600 md:col-span-3">{s.description}</div>
-              <div className="flex items-center gap-2 justify-end">
+              <div className="text-sm text-gray-600 md:col-span-3 break-words">{s.description}</div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 justify-end">
                 <a href={`/admin/services?edit=${s.id}`} className="rounded-md border px-3 py-1.5 text-sm">Editar</a>
                 <form action={deleteService}>
                   <input type="hidden" name="id" value={s.id} />
